@@ -9,6 +9,7 @@ env.config();
 
 //routes
 const authRoutes = require("./routes/auth");
+const roleRoutes = require("./routes/role");
 
 //using express application
 const app = express();
@@ -42,7 +43,7 @@ app.use("/public", express.static(path.join(__dirname, "uploads")));
 
 //rest api routes
 app.use("/api", authRoutes);
-
+app.use("/api", roleRoutes);
 app.listen(process.env.PORT, () => {
   console.log(`SERVER is running at PORT = ${process.env.PORT}`);
 });

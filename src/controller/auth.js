@@ -40,7 +40,7 @@ exports.signin = async (req, res) => {
   try {
     const user = await User.findOne({
       $or: [{ email: email }, { username: username }],
-    }).populate("Role", "_id name");
+    }).populate("role", "_id name");
 
     if (user) {
       if (user.authenticate(password)) {
@@ -129,15 +129,6 @@ exports.forgetPassword = (req, res) => {
     });
   });
 };
-
-// exports.resetPasswordController =(req,res)=>{
-// const {userId, token, password} =req.body
-// const resetPasswordService = await resetPassword(
-//   userId, token, password
-// );
-// if(res) return res.json(resetPasswordService);
-// else return res.status(400).json(error);
-// }
 
 exports.resetPassword = async (req, res) => {
   const { userId, token, password } = req.body;

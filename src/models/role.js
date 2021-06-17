@@ -3,7 +3,7 @@ const roleSchema = new mongoose.Schema(
   {
     name: String,
     features: [String],
-    enable: boolean,
+    enable: Boolean,
   },
   { timestamps: true }
 );
