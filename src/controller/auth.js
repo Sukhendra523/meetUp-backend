@@ -9,9 +9,21 @@ const nodemailer = require("nodemailer");
 exports.signup = async (req, res) => {
   const { email, username, password } = req.body;
   try {
-    const user = await User.findOne({ email: email });
-    if (user) {
-      return res.status(400).json({ message: "Email already Exists" });
+    const emailExits = await User.findOne(
+      { email: email },
+      { email: 1, _id: 0 }
+    );
+    const usernameExits = await User.findOne(
+      { username: username },
+      { username: 1, _id: 0 }
+    );
+
+    if (emailExits || usernameExits) {
+      return res.status(400).json({
+        message:
+          (emailExits ? `${emailExits}` : `${usernameExits}`) +
+          " already Exists",
+      });
     } else {
       const hashPassword = await bcrypt.hash(password, 10);
       const newUser = new User({
