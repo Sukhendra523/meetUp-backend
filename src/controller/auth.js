@@ -5,6 +5,51 @@ const User = require("../models/user");
 const Token = require("../models/token");
 const moment = require("moment");
 const nodemailer = require("nodemailer");
+const env = require("dotenv");
+const passport = require("passport");
+const strategy = require("passport-facebook");
+
+//Environment Variable
+env.config();
+
+//Working on it
+const FacebookStrategy = strategy.Strategy;
+passport.serializeUser(function (user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function (obj, done) {
+  done(null, obj);
+});
+
+passport.use(
+  new FacebookStrategy(
+    {
+      clientID: process.env.FACEBOOK_CLIENT_ID,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+      callbackURL: process.env.FACEBOOK_CALLBACK_URL,
+      profileFields: [
+        "id",
+        "displayName",
+        "name",
+        "gender",
+        "picture.type(large)",
+        "email",
+      ],
+    },
+    function (accessToken, refreshToken, profile, done) {
+      const { email, first_name, last_name } = profile._json;
+      console.log(profile);
+      // const userData = {
+      //   email,
+      //   firstName: first_name,
+      //   lastName: last_name
+      // };
+      // new userModel(userData).save();
+      done(null, profile);
+    }
+  )
+);
 
 exports.signup = async (req, res) => {
   const { email, username, password } = req.body;
@@ -18,11 +63,7 @@ exports.signup = async (req, res) => {
     if (emailExits || usernameExits) {
       return res.status(400).json({
         message:
-          "This " +
-          (emailExits
-            ? `email ${emailExits.email}`
-            : `username ${usernameExits.username}`) +
-          " already Exists",
+          "This " + (emailExits ? "email" : "username") + " already Exists",
       });
     } else {
       const hashPassword = await bcrypt.hash(password, 10);
