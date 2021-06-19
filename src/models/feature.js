@@ -1,10 +1,15 @@
 const mongoose = require("mongoose");
-const featureSchema = new mongoose.Schema(
-  {
-    name: String,
-    enable: boolean,
+const featureSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true,
   },
-  { timestamps: true }
-);
+  enable: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
+});
 
-module.exports = mongoose.model("feature", featureSchema);
+module.exports = mongoose.model("Feature", featureSchema);

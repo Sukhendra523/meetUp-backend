@@ -76,15 +76,14 @@ exports.signup = async (req, res) => {
       if (savedUser) {
         res
           .status(201)
-          .json({ message: `user Signup Successfully`, savedUser });
-      } else {
-        res.status(400).json({
-          message: "Can not save please try again",
-        });
+          .json({ message: `User Signup Successfully`, savedUser });
       }
     }
   } catch (error) {
-    console.log(error.message);
+    res.status(400).json({
+      error: error.message,
+      message: "Somthing goes wrong !! tyr again later",
+    });
   }
 };
 
@@ -102,15 +101,18 @@ exports.signin = async (req, res) => {
           process.env.SECRET_KEY,
           { expiresIn: "1d" }
         );
-        res.status(200).json({ token, user: user });
+        res.status(200).json({ token, user });
       } else {
-        res.status(400).json({ message: "Invalid Password" });
+        res.status(400).json({ message: "Incorrect Password" });
       }
     } else {
-      return res.status(400).json({ message: "Invalid ID" });
+      return res.status(400).json({ message: "Incorrect Password or Id" });
     }
   } catch (error) {
-    console.log(error.message);
+    res.status(400).json({
+      error: error.message,
+      message: "Somthing goes wrong !! tyr again later",
+    });
   }
 };
 

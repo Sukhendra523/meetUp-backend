@@ -11,6 +11,8 @@ env.config();
 //routes
 const authRoutes = require("./routes/auth");
 const roleRoutes = require("./routes/role");
+const featureRoutes = require("./routes/feature");
+const oauthRoutes = require("./routes/oauth");
 
 //using express application
 const app = express();
@@ -44,7 +46,9 @@ app.use("/public", express.static(path.join(__dirname, "uploads")));
 app.use(passport.initialize());
 
 //rest api routes
+app.use("/", oauthRoutes);
 app.use("/api", authRoutes);
+app.use("/api", featureRoutes);
 app.use("/api", roleRoutes);
 
 app.listen(process.env.PORT, () => {
