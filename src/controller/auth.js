@@ -8,51 +8,54 @@ const nodemailer = require("nodemailer");
 const env = require("dotenv");
 const passport = require("passport");
 const strategy = require("passport-facebook");
+const fetch = require("node-fetch");
 
 //Environment Variable
 env.config();
 
-//Working on it
-const FacebookStrategy = strategy.Strategy;
-passport.serializeUser(function (user, done) {
-  done(null, user);
-});
-
-passport.deserializeUser(function (obj, done) {
-  done(null, obj);
-});
-
-passport.use(
-  new FacebookStrategy(
-    {
-      clientID: process.env.FACEBOOK_CLIENT_ID,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-      callbackURL: process.env.FACEBOOK_CALLBACK_URL,
-      profileFields: [
-        "id",
-        "displayName",
-        "name",
-        "gender",
-        "picture.type(large)",
-        "email",
-      ],
-    },
-    function (accessToken, refreshToken, profile, done) {
-      const { email, first_name, last_name } = profile._json;
-      console.log(profile);
-      // const userData = {
-      //   email,
-      //   firstName: first_name,
-      //   lastName: last_name
-      // };
-      // new userModel(userData).save();
-      done(null, profile);
+exports.facebookSignin = async (req, res) => {
+  const { userId, accessToken } = req.body;
+  try {
+    let urlGraphFacebook = `https://graph.facebook.com/v2.11/${userId}/?fields=id,name,username,email&access_token=${accessToken}`;
+    const { email, username } = await (
+      await fetch(urlGraphFacebook, { method: "GET" })
+    ).json();
+    const user = await User.findOne(email).populate("role", "_id name");
+    if (user) {
+      const token = jwt.sign(
+        { _id: user._id, role: user.role.name },
+        process.env.SECRET_KEY,
+        { expiresIn: "1d" }
+      );
+      res.status(200).json({ token, user });
+    } else {
+      const password = email + process.env.SECRET_KEY;
+      const hashPassword = await bcrypt.hash(password, 10);
+      const newUser = new User({
+        email,
+        username,
+        password: { oauthPassword: hashPassword, userPassword: hashPassword },
+      });
+      const user = await newUser.save().populate("role", "_id name");
+      if (user) {
+        const token = jwt.sign(
+          { _id: user._id, role: user.role.name },
+          process.env.SECRET_KEY,
+          { expiresIn: "1d" }
+        );
+        res.status(200).json({ token, user });
+      }
     }
-  )
-);
+  } catch (error) {
+    res.status(400).json({
+      error: error.message,
+      message: "Somthing goes wrong !! tyr again later",
+    });
+  }
+};
 
 exports.signup = async (req, res) => {
-  const { email, username, password } = req.body;
+  const { email, username, contact, password } = req.body;
   try {
     const emailExits = await User.findOne({ email: email }, "email");
     const usernameExits = await User.findOne(
@@ -70,13 +73,18 @@ exports.signup = async (req, res) => {
       const newUser = new User({
         email,
         username,
-        password: hashPassword,
+        contact,
+        password: { oauthPassword: "", userPassword: hashPassword },
       });
-      const savedUser = await newUser.save();
-      if (savedUser) {
-        res
-          .status(201)
-          .json({ message: `User Signup Successfully`, savedUser });
+      const user = await newUser.save();
+      if (user) {
+        const _user = user.populate("role", "_id name");
+        const token = jwt.sign(
+          { _id: user._id, role: _user.role.name },
+          process.env.SECRET_KEY,
+          { expiresIn: "1d" }
+        );
+        res.status(200).json({ token, _user });
       }
     }
   } catch (error) {

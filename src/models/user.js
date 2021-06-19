@@ -36,8 +36,11 @@ const userSchema = new mongoose.Schema(
       default: mongoose.Types.ObjectId("60cba03e750ed21cb81919bc"),
     },
     password: {
-      type: String,
-      required: true,
+      oauthPassword: String,
+      userPassword: {
+        type: String,
+        required: true,
+      },
     },
     image: String,
     contact: Number,
@@ -51,7 +54,7 @@ userSchema.virtual("fullName").get(function () {
 
 userSchema.methods = {
   authenticate: async function (textPassword) {
-    return await bcrypt.compare(textPassword, this.password);
+    return await bcrypt.compare(textPassword, this.password.userPassword);
   },
 };
 

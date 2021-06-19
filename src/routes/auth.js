@@ -5,6 +5,7 @@ const {
   signin,
   forgetPassword,
   resetPassword,
+  facebookSignin,
 } = require("../controller/auth");
 const {
   validateSignupRequest,
@@ -18,6 +19,7 @@ const router = express.Router();
 
 router.post("/signup", validateSignupRequest, isRequestValidated, signup);
 router.post("/signin", validateSigninRequest, isRequestValidated, signin);
+router.post("/facebookLogin", facebookSignin);
 
 router.get(
   "/forget",
