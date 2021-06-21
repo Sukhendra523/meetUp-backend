@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { permissionsConstant } = require("../controller/constant");
 
 exports.requireSignin = (req, res, next) => {
   if (req.headers.authorization) {
@@ -11,23 +12,16 @@ exports.requireSignin = (req, res, next) => {
   next();
 };
 
-exports.isStudent = (req, res, next) => {
-  if (req.user.role == "student") {
-    return res.status(400).json({ message: "Student Acces denied" });
+exports.canReadUser = (req, res, next) => {
+  if (!req.user.role.permissions.includes(permissionsConstant.READ_USER)) {
+    return res.status(400).json({ message: " Acces denied" });
   }
   next();
 };
 
-exports.isTeacher = (req, res, next) => {
-  if (req.user.role !== "teacher") {
-    return res.status(400).json({ message: "Teacher Acces denied" });
-  }
-  next();
-};
-
-exports.isAdmin = (req, res, next) => {
-  if (req.user.role !== "admin") {
-    return res.status(400).json({ message: " Admin Acces denied" });
+exports.canWriteUser = (req, res, next) => {
+  if (!req.user.role.permissions.includes(permissionsConstant.WRITE_USER)) {
+    return res.status(400).json({ message: " Acces denied" });
   }
   next();
 };

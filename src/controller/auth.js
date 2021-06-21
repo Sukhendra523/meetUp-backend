@@ -19,10 +19,13 @@ exports.facebookSignin = async (req, res) => {
     const { email, username } = await (
       await fetch(urlGraphFacebook, { method: "GET" })
     ).json();
-    const user = await User.findOne(email).populate("role", "_id name");
+    const user = await User.findOne(email).populate(
+      "role",
+      "_id name permissions enable"
+    );
     if (user) {
       const token = jwt.sign(
-        { _id: user._id, role: user.role.name },
+        { _id: user._id, role: user.role },
         process.env.SECRET_KEY,
         { expiresIn: "1d" }
       );
@@ -35,10 +38,12 @@ exports.facebookSignin = async (req, res) => {
         username,
         password: { oauthPassword: hashPassword, userPassword: hashPassword },
       });
-      const user = await newUser.save().populate("role", "_id name");
+      const user = await newUser
+        .save()
+        .populate("role", "_id name permissions enable");
       if (user) {
         const token = jwt.sign(
-          { _id: user._id, role: user.role.name },
+          { _id: user._id, role: user.role },
           process.env.SECRET_KEY,
           { expiresIn: "1d" }
         );
@@ -61,7 +66,6 @@ exports.signup = async (req, res) => {
       { username: username },
       "username"
     );
-
     if (emailExits || usernameExits) {
       return res.status(400).json({
         message:
@@ -76,11 +80,11 @@ exports.signup = async (req, res) => {
         password: { oauthPassword: "", userPassword: hashPassword },
       });
       const user = await (await newUser.save())
-        .populate("role", "_id name")
+        .populate("role", "_id name permissions enable")
         .execPopulate();
       if (user) {
         const token = jwt.sign(
-          { _id: user._id, role: user.role.name },
+          { _id: user._id, role: user.role },
           process.env.SECRET_KEY,
           { expiresIn: "1d" }
         );
@@ -100,12 +104,12 @@ exports.signin = async (req, res) => {
   try {
     const user = await User.findOne({
       $or: [{ email: email }, { username: username }],
-    }).populate("role", "_id name");
+    }).populate("role", "_id name permissions enable");
 
     if (user) {
       if (user.authenticate(password)) {
         const token = jwt.sign(
-          { _id: user._id, role: user.role.name },
+          { _id: user._id, role: user.role },
           process.env.SECRET_KEY,
           { expiresIn: "1d" }
         );
