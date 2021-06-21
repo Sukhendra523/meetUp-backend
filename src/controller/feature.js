@@ -46,10 +46,7 @@ exports.getFeatureDetails = async (req, res) => {
 // add new feature
 exports.addFeature = async (req, res) => {
   try {
-    const newFeature = new Feature({
-      name: req.body.name,
-      enable: req.body.enable,
-    });
+    const newFeature = new Feature(req.body);
     if (newFeature) {
       const savedFeature = await newFeature.save();
       if (savedFeature) {
@@ -71,7 +68,7 @@ exports.addFeature = async (req, res) => {
 exports.updateFeature = async (req, res) => {
   const id = req.params.id;
   try {
-    const feature = await Feature.findByIdAndUpdate(id, { ...req.body });
+    const feature = await Feature.findByIdAndUpdate(id, req.body);
     if (feature) {
       res.status(200).json({ message: "Updated successfully" });
     }

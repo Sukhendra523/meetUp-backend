@@ -6,8 +6,7 @@ const Token = require("../models/token");
 const moment = require("moment");
 const nodemailer = require("nodemailer");
 const env = require("dotenv");
-const passport = require("passport");
-const strategy = require("passport-facebook");
+
 const fetch = require("node-fetch");
 
 //Environment Variable
@@ -76,15 +75,16 @@ exports.signup = async (req, res) => {
         contact,
         password: { oauthPassword: "", userPassword: hashPassword },
       });
-      const user = await newUser.save();
+      const user = await (await newUser.save())
+        .populate("role", "_id name")
+        .execPopulate();
       if (user) {
-        const _user = user.populate("role", "_id name");
         const token = jwt.sign(
-          { _id: user._id, role: _user.role.name },
+          { _id: user._id, role: user.role.name },
           process.env.SECRET_KEY,
           { expiresIn: "1d" }
         );
-        res.status(200).json({ token, _user });
+        res.status(200).json({ token, user });
       }
     }
   } catch (error) {

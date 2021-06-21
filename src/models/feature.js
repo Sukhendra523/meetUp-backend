@@ -7,8 +7,12 @@ const featureSchema = new mongoose.Schema({
   },
   enable: {
     type: Boolean,
+    default: true,
+  },
+  privacy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Role",
     required: true,
-    default: false,
   },
 });
 
