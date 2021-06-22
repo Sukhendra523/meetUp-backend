@@ -1,6 +1,7 @@
 const express = require("express");
+const { requireSignin } = require("../common-middleware");
 const {
-  addFeature,
+  createFeature,
   deleteFeature,
   getAllFeatures,
   getFeatureDetails,
@@ -9,10 +10,20 @@ const {
 
 const router = express.Router();
 
-router.get("/features", getAllFeatures);
-router.get("/feature/:id", getFeatureDetails);
-router.post("/feature/add", addFeature);
-router.put("/feature/update/:id", updateFeature);
-router.delete("/feature/delete/:id", deleteFeature);
+router.get("/features", requireSignin, canWriteFeature, getAllFeatures);
+router.get("/feature/:id", requireSignin, canWriteFeature, getFeatureDetails);
+router.post("/feature/create", requireSignin, canWriteFeature, createFeature);
+router.put(
+  "/feature/update/:id",
+  requireSignin,
+  canWriteFeature,
+  updateFeature
+);
+router.delete(
+  "/feature/delete/:id",
+  requireSignin,
+  canWriteFeature,
+  deleteFeature
+);
 
 module.exports = router;

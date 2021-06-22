@@ -5,9 +5,7 @@ exports.getAllFeatures = async (req, res) => {
   try {
     const features = await Feature.find({});
     if (features.length > 0) {
-      res.status(200).json({
-        features,
-      });
+      res.status(200).json(features);
     } else {
       res.status(400).json({
         message: "No featues found",
@@ -27,9 +25,7 @@ exports.getFeatureDetails = async (req, res) => {
     const id = req.params.id;
     const feature = await Feature.findById(id);
     if (feature) {
-      res.status(200).json({
-        feature,
-      });
+      res.status(200).json(feature);
     } else {
       res.status(400).json({
         message: "Feature not found",
@@ -44,15 +40,19 @@ exports.getFeatureDetails = async (req, res) => {
 };
 
 // add new feature
-exports.addFeature = async (req, res) => {
+exports.createFeature = async (req, res) => {
   try {
-    const newFeature = new Feature(req.body);
-    if (newFeature) {
-      const savedFeature = await newFeature.save();
-      if (savedFeature) {
+    const feature = new Feature(req.body);
+    if (feature) {
+      const feature = await newFeature.save();
+      if (feature) {
         res.status(201).json({
           savedFeature,
           message: "Feature added successfully",
+        });
+      } else {
+        res.status(400).json({
+          message: "Unable to Create",
         });
       }
     }
@@ -66,11 +66,15 @@ exports.addFeature = async (req, res) => {
 
 // updating a feature
 exports.updateFeature = async (req, res) => {
-  const id = req.params.id;
   try {
+    const id = req.params.id;
     const feature = await Feature.findByIdAndUpdate(id, req.body);
     if (feature) {
-      res.status(200).json({ message: "Updated successfully" });
+      res.status(200).json({ feature, message: "Updated successfully" });
+    } else {
+      res.status(400).json({
+        message: "Unable to update",
+      });
     }
   } catch (error) {
     res.status(400).json({
@@ -84,11 +88,15 @@ exports.updateFeature = async (req, res) => {
 exports.deleteFeature = async (req, res) => {
   const id = req.params.id;
   try {
-    const myFeature = await Feature.findByIdAndDelete(id);
-    if (myFeature) {
+    const feature = await Feature.findByIdAndDelete(id);
+    if (feature) {
       res.status(200).json({
-        myFeature,
+        feature,
         message: "feature deleted succssfully",
+      });
+    } else {
+      res.status(400).json({
+        message: "Unable to delete",
       });
     }
   } catch (error) {

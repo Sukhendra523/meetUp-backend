@@ -25,3 +25,17 @@ exports.canWriteUser = (req, res, next) => {
   }
   next();
 };
+
+exports.canWriteRole = (req, res, next) => {
+  if (!req.user.role.permissions.includes(permissionsConstant.WRITE_ROLE)) {
+    return res.status(400).json({ message: " Acces denied" });
+  }
+  next();
+};
+
+exports.canWriteFeature = (req, res, next) => {
+  if (!req.user.role.permissions.includes(permissionsConstant.WRITE_FEATURE)) {
+    return res.status(400).json({ message: " Acces denied" });
+  }
+  next();
+};
