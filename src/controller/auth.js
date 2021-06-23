@@ -1,12 +1,11 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const crypto = require("crypto");
 const User = require("../models/user");
 const Token = require("../models/token");
-const moment = require("moment");
-const nodemailer = require("nodemailer");
 const env = require("dotenv");
-
+const mailgun = require("mailgun-js");
+const DOMAIN = "sandboxf74c8ab61afc4c76934293627a5a58c1.mailgun.org";
+const mg = mailgun({ apiKey: process.env.MAILGUN_APIKEY, domain: DOMAIN });
 const fetch = require("node-fetch");
 
 //Environment Variable
@@ -66,6 +65,7 @@ exports.signup = async (req, res) => {
       { username: username },
       "username"
     );
+
     if (emailExits || usernameExits) {
       return res.status(400).json({
         message:
@@ -79,16 +79,52 @@ exports.signup = async (req, res) => {
         contact,
         password: { oauthPassword: "", userPassword: hashPassword },
       });
+
       const user = await (await newUser.save())
         .populate("role", "_id name permissions enable")
         .execPopulate();
+
       if (user) {
         const token = jwt.sign(
           { email: user.email, _id: user._id, role: user.role },
           process.env.SECRET_KEY,
           { expiresIn: "1d" }
         );
-        res.status(200).json({ token, user });
+
+        let data = {
+          from: "Sukhendra Rajawat contact.sukhendra@gmail.com",
+          to: user.email,
+          subject: "Activate your account",
+          html: `<div style="margin: auto;width: 50%;">
+            <div style="padding-top:32px;text-align:center">
+            <h1><b>Activate your account</b></h1>
+            <h3>Please click the link below to activate your account</h3> 
+            <a style="
+            line-height: 16px;
+            color: #ffffff;
+            font-weight: 400;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-block;
+            padding: 10px 24px;
+            background-color: #4184f3;
+            border-radius: 5px;
+            min-width: 90px;" href="${process.env.ClIENT_URL}/activate/${token}">Activate Account</a></div></div>`,
+        };
+
+        const body = await mg.messages().send(data);
+        body
+          ? res.status(200).json({
+              message: "Email has sent, kindly activate your Account",
+              token,
+              user,
+            })
+          : res.status(200).json({
+              message:
+                "Unable to send Email to verify Account, kindly activate your Account",
+              token,
+              user,
+            });
       }
     }
   } catch (error) {
@@ -96,6 +132,18 @@ exports.signup = async (req, res) => {
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
+  }
+};
+
+exports.activateAccount = async (req, res) => {
+  const { token } = req.body;
+  if (token) {
+    const user = jwt.verify(token, process.env.SECRET_KEY);
+    if (user) {
+      res.status(200).json({ message: "Accounted Activated Successfully " });
+    } else {
+      return res.status(400).json({ message: "Incorrect or  Expired Link ." });
+    }
   }
 };
 
@@ -128,117 +176,121 @@ exports.signin = async (req, res) => {
   }
 };
 
-exports.forgetPassword = (req, res) => {
-  User.findOne({ email: req.query.email }, (error, user) => {
-    if (error) return res.status(400).json(error);
+exports.forgetPassword = async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
     if (!user) {
       return res
         .status(400)
         .json({ message: "No user found with that email address." });
     }
-    Token.findOne({ userId: user._id }, (error, token) => {
-      if (error) return res.status(400).json(error);
-      if (token) token.deleteOne();
-      let resetToken = crypto.randomBytes(32).toString("hex"); //creating the token to be sent to the forgot password form (react)
-      bcrypt.hash(resetToken, 10, (error, hash) => {
-        Token.create({
-          userId: user._id,
-          token: hash,
-          expire: moment.utc().add(3600, "seconds"),
-        }).then(function (item) {
-          if (!item)
-            return throwFailed(
-              res,
-              "Oops problem in creating new password record"
-            );
-
-          var smtpTransport = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-              user: "contact.sukhendra@gmail.com",
-              pass: "think523",
-            },
-          });
-          let mailOptions = {
-            from: '"<Sukhendra Rajawat>" contact.sukhendra@gmail.com',
-            to: user.email,
-            subject: "Reset your account password",
-            html:
-              "<h4><b>Reset Password</b></h4>" +
-              "<p>To reset your password, click here:</p>" +
-              "<a href=" +
-              process.env.ClIENT_URL +
-              "reset/" +
-              user._id +
-              "/" +
-              token +
-              '">' +
-              process.env.ClIENT_URL +
-              "reset/" +
-              user._id +
-              "/" +
-              token +
-              "</a>" +
-              "<br><br>" +
-              "<p>--Team</p>",
-          };
-          let mailSent = smtpTransport.sendMail(mailOptions); //sending mail to the user where he can reset password.User id and the token generated are sent as params in a link
-          if (mailSent) {
-            return res.status(200).json({
-              success: true,
-              message: "Check your mail to reset your password.",
-            });
-          } else {
-            return throwFailed(error, "Unable to send email.");
-          }
-        });
-      });
+    const resetToken = jwt.sign({ _id: user._id }, process.env.SECRET_KEY, {
+      expiresIn: "20min",
     });
-  });
+    const { token } = await Token.findOneAndUpdate(
+      { userId: user._id },
+      { userId: user._id, token: resetToken },
+      { upsert: true, new: true }
+    );
+
+    if (token) {
+      let data = {
+        from: "Sukhendra Rajawat contact.sukhendra@gmail.com",
+        to: user.email,
+        subject: "Reset your password",
+        html: `<div style="margin: auto;width: 50%;">
+        <div style="padding-top:32px;text-align:center">
+        <h1><b>Reset your password</b></h1>
+        <h3>Please click the link below to reset your password</h3> 
+        <a style="
+        line-height: 16px;
+        color: #ffffff;
+        font-weight: 400;
+        text-decoration: none;
+        font-size: 14px;
+        display: inline-block;
+        padding: 10px 24px;
+        background-color: #4184f3;
+        border-radius: 5px;
+        min-width: 90px;" href="${process.env.ClIENT_URL}/reset-password/${token}">Reset password</a></div></div>`,
+      };
+
+      const body = await mg.messages().send(data);
+      body &&
+        res.status(200).json({
+          message: "Email has sent,kindly follow the instruction",
+        });
+    }
+  } catch (error) {
+    res.status(400).json({
+      error: error.message,
+      message: "Somthing goes wrong !! tyr again later",
+    });
+  }
 };
 
 exports.resetPassword = async (req, res) => {
-  const { userId, token, password } = req.body;
-  let passwordResetToken = await Token.findOne({ userId });
-  if (!passwordResetToken) {
-    throw new Error("Invalid or expired password reset token");
-  }
-  const isValid = await bcrypt.compare(token, passwordResetToken.token);
-  if (!isValid) {
-    throw new Error("Invalid or expired password reset token");
-  }
+  try {
+    const { token, password } = req.body;
+    const { _id } = jwt.verify(token, process.env.SECRET_KEY);
+    if (!_id) {
+      throw new Error("Invalid or expired password reset token");
+    }
+    let resetToken = await Token.findOne({ userId: _id });
 
-  await User.updateOne(
-    { _id: userId },
-    { $set: { password: password } },
-    { new: true }
-  );
+    if (!resetToken) {
+      throw new Error("Invalid or expired password reset token");
+    }
 
-  const user = await User.findById({ _id: userId });
+    const hashPassword = await bcrypt.hash(password, 10);
+    const user = await User.findOneAndUpdate(
+      { _id: _id },
+      { password: hashPassword },
+      { new: true }
+    );
+    if (user) {
+      let data = {
+        from: "Sukhendra Rajawat contact.sukhendra@gmail.com",
+        to: user.email,
+        subject: "Your password has changed",
+        html: `<div style="margin: auto;width: 50%;">
+      <div style="padding-top:32px;text-align:center">
+      <h1><b>Your account password has changed</b></h1>
+      <h3>Hi ${user.firstName ? user.firstName : "user"}</h3>
+      <p>We’re confirming that you changed your ITAIMS account password for ${
+        user.email
+      }.</p>
+      <p>If you did not reset this password, please contact ITAIMS support immediately at info@itaims.com.
+      </p> 
+      <a style="
+      line-height: 16px;
+      color: #ffffff;
+      font-weight: 400;
+      text-decoration: none;
+      font-size: 14px;
+      display: inline-block;
+      padding: 10px 24px;
+      background-color: #4184f3;
+      border-radius: 5px;
+      min-width: 90px;" href="${process.env.ClIENT_URL}/contact">Contact</a>
+      <p>With love,
+      <br/>
+      The ITAIMS Team</p>
+      </div></div>`,
+      };
 
-  var smtpTransport = nodemailer.createTransport("SMTP", {
-    service: "SendGrid",
-    auth: {
-      user: "sukhendra523",
-      pass: process.env.SENDGRID_API_KEY,
-    },
-  });
-
-  let mailOptions = {
-    from: '"<Sukhendra Rajawat>" 523sukh@gmail.com',
-    to: user.email,
-    subject: "Password has Changed",
-    html: "<h4><b>Password has Changed successfully</b></h4>",
-  };
-
-  let mailSent = smtpTransport.sendMail(mailOptions); //sending mail to the user where he can reset password.User id and the token generated are sent as params in a link
-  if (mailSent) {
-    return res.json({
-      success: true,
-      message: "Password has Changed successfully",
+      const body = await mg.messages().send(data);
+      body &&
+        res.status(200).json({
+          message: "Password has Changed successfully",
+        });
+    } else {
+      return throwFailed(error, "Unable to send email.");
+    }
+  } catch (error) {
+    res.status(400).json({
+      error: error.message,
+      message: "Somthing goes wrong !! tyr again later",
     });
-  } else {
-    return throwFailed(error, "Unable to send email.");
   }
-  await passwordResetToken.deleteOne();
 };

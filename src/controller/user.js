@@ -1,5 +1,19 @@
 const User = require("../models/user");
 
+exports.createUser = async (req, res) => {
+  try {
+    const newUser = new User({
+      email,
+      role,
+    });
+  } catch (error) {
+    res.status(400).json({
+      error: error.message,
+      message: "Somthing goes wrong !! tyr again later",
+    });
+  }
+};
+
 // getALLUser
 exports.getAllUsers = async (req, res) => {
   try {
