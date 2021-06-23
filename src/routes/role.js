@@ -16,7 +16,7 @@ router.post("/createInitialRole", createInitialRole);
 router.post("/createSuperAdmin", createSuperAdminRole);
 ////////////////////////////////////////////////////////
 
-router.all("/", requireSignin, canWriteRole);
+router.use("/", requireSignin, canWriteRole);
 
 router.post("/roles", getAllRole);
 router.post("/role/:id", getRoleDetails);

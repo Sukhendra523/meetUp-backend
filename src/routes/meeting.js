@@ -23,9 +23,13 @@ router.use("/", requireSignin);
 
 router.param("id", checkMeetingAccess);
 
+//create meeting
 router.post("/meeting/create", canWriteMeeting, createMeeting);
+
+// getAllMeetings
 router.get("/meetings", canManageMeeting, getAllMeeting);
 
+// get Meeting List ByDateAndEmail
 router.get(
   "/meeting/:date",
   (req, res, next) =>
@@ -35,10 +39,13 @@ router.get(
   getMeetingByDateAndEmail
 );
 
+// get Meeting Details
 router.get("/meeting/getMeetingDetails/:id", getMeetingDetails);
 
+// delete meeting
 router.delete("/meeting/delete/:id", deleteMeeting);
 
+// update Meeting
 router.put("/meeting/update/:id", updateMeeting);
 
 module.exports = router;
