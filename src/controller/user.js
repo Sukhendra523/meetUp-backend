@@ -1,11 +1,62 @@
 const User = require("../models/user");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const Token = require("../models/token");
+const env = require("dotenv");
+const mailgun = require("mailgun-js");
+const DOMAIN = "sandboxf74c8ab61afc4c76934293627a5a58c1.mailgun.org";
+const mg = mailgun({ apiKey: process.env.MAILGUN_APIKEY, domain: DOMAIN });
+//Environment Variable
+env.config();
 
 exports.createUser = async (req, res) => {
   try {
-    const newUser = new User({
-      email,
-      role,
-    });
+    const { email, role } = req.body;
+    const user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({ message: "User already exists" });
+    } else {
+      const registerToken = jwt.sign({ email, role }, process.env.SECRET_KEY, {
+        expiresIn: "1d",
+      });
+      const { token } = await Token.findOneAndUpdate(
+        { token: registerToken },
+        { token: registerToken },
+        { upsert: true, new: true }
+      );
+      if (token) {
+        let data = {
+          from: "ITAIMS info@itaims.com",
+          to: email,
+          subject: "Register your account",
+          html: `<div style="margin: auto;width: 50%;">
+          <div style="padding-top:32px;text-align:center">
+          <h1><b>ITAIMS requested you to create your new account</b></h1>
+          <h3>Please click the link below to create new your account with in 24 hours</h3> 
+          <a style="
+          line-height: 16px;
+          color: #ffffff;
+          font-weight: 400;
+          text-decoration: none;
+          font-size: 14px;
+          display: inline-block;
+          padding: 10px 24px;
+          background-color: #4184f3;
+          border-radius: 5px;
+          min-width: 90px;" href="${process.env.ClIENT_URL}/register/${token}">Register</a>
+          <p>With love,
+          <br/>
+          <b>The ITAIMS Team</b></p>
+          </div></div>`,
+        };
+
+        const body = await mg.messages().send(data);
+        body &&
+          res.status(200).json({
+            message: `Email has sent to ${email},now user can register`,
+          });
+      }
+    }
   } catch (error) {
     res.status(400).json({
       error: error.message,

@@ -92,7 +92,7 @@ exports.signup = async (req, res) => {
         );
 
         let data = {
-          from: "Sukhendra Rajawat contact.sukhendra@gmail.com",
+          from: "ITAIMS info@itaims.com",
           to: user.email,
           subject: "Activate your account",
           html: `<div style="margin: auto;width: 50%;">
@@ -126,6 +126,89 @@ exports.signup = async (req, res) => {
               user,
             });
       }
+    }
+  } catch (error) {
+    res.status(400).json({
+      error: error.message,
+      message: "Somthing goes wrong !! tyr again later",
+    });
+  }
+};
+
+exports.registerAccount = async (req, res) => {
+  try {
+    const { token, email, username, password } = req.body;
+    const auth = jwt.verify(token, process.env.SECRET_KEY);
+    if (!auth) throw new Error("Invalid or expired password reset token");
+
+    let resetToken = await Token.findOne({ token: token });
+    if (!resetToken) throw new Error("Invalid or expired password reset token");
+
+    if (email !== auth.email)
+      throw new Error("Please use authorised email to register");
+
+    const emailExits = await User.findOne({ email: email }, "email");
+    const usernameExits = await User.findOne(
+      { username: username },
+      "username"
+    );
+
+    if (emailExits || usernameExits)
+      throw new Error(
+        "This " + (emailExits ? "email" : "username") + " already Exists"
+      );
+
+    const hashPassword = await bcrypt.hash(password, 10);
+    const newUser = await User.create({
+      email: auth.email,
+      username,
+      password: { oauthPassword: "", userPassword: hashPassword },
+      role: auth.role,
+    });
+    const user = await newUser
+      .populate("role", "_id name permissions enable")
+      .execPopulate();
+
+    if (user) {
+      const token = jwt.sign(
+        { email: user.email, _id: user._id, role: user.role },
+        process.env.SECRET_KEY,
+        { expiresIn: "1d" }
+      );
+      let data = {
+        from: "ITAIMS info@itaims.com",
+        to: user.email,
+        subject: "Activate your account",
+        html: `<div style="margin: auto;width: 50%;">
+          <div style="padding-top:32px;text-align:center">
+          <h1><b>Activate your account</b></h1>
+          <h3>Please click the link below to activate your account</h3> 
+          <a style="
+          line-height: 16px;
+          color: #ffffff;
+          font-weight: 400;
+          text-decoration: none;
+          font-size: 14px;
+          display: inline-block;
+          padding: 10px 24px;
+          background-color: #4184f3;
+          border-radius: 5px;
+          min-width: 90px;" href="${process.env.ClIENT_URL}/activate/${token}">Activate Account</a></div></div>`,
+      };
+
+      const body = await mg.messages().send(data);
+      body
+        ? res.status(200).json({
+            message: "Email has sent, kindly activate your Account",
+            token,
+            user,
+          })
+        : res.status(200).json({
+            message:
+              "Unable to send Email to verify Account, kindly activate your Account",
+            token,
+            user,
+          });
     }
   } catch (error) {
     res.status(400).json({
@@ -195,7 +278,7 @@ exports.forgetPassword = async (req, res) => {
 
     if (token) {
       let data = {
-        from: "Sukhendra Rajawat contact.sukhendra@gmail.com",
+        from: "ITAIMS info@itaims.com",
         to: user.email,
         subject: "Reset your password",
         html: `<div style="margin: auto;width: 50%;">
@@ -250,7 +333,7 @@ exports.resetPassword = async (req, res) => {
     );
     if (user) {
       let data = {
-        from: "Sukhendra Rajawat contact.sukhendra@gmail.com",
+        from: "ITAIMS info@itaims.com",
         to: user.email,
         subject: "Your password has changed",
         html: `<div style="margin: auto;width: 50%;">

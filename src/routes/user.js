@@ -16,6 +16,7 @@ const {
   getAllUsers,
   searchUser,
   deleteUser,
+  createUser,
 } = require("../controller/user");
 
 const storage = multer.diskStorage({
@@ -31,11 +32,13 @@ const upload = multer({ storage });
 
 const router = express.Router();
 
-router.get("/users", requireSignin, canReadUser, getAllUsers);
+router.use("/", requireSignin);
+
+router.post("/user/create", canWriteUser, createUser);
+router.get("/users", canReadUser, getAllUsers);
 
 router.get(
   "/user/:id",
-  requireSignin,
   (req, res, next) =>
     req.params.id !== req.user._id ? canReadUser(req, res, next) : next(),
   getUserDetails
@@ -43,16 +46,16 @@ router.get(
 
 router.get(
   "/users/searchEmails/:input",
-  requireSignin,
+
   canReadUser,
   searchUserEmails
 );
 
-router.get("/users/search/:input", requireSignin, canReadUser, searchUser);
+router.get("/users/search/:input", canReadUser, searchUser);
 
 router.get(
   "/user/profile/:id",
-  requireSignin,
+
   (req, res, next) =>
     req.params.id !== req.user._id ? canReadUser(req, res, next) : next(),
   getUserProfile
@@ -60,7 +63,7 @@ router.get(
 
 router.delete(
   "/user/delete/:id",
-  requireSignin,
+
   (req, res, next) =>
     req.params.id !== req.user._id ? canWriteUser(req, res, next) : next(),
   deleteUser
@@ -68,7 +71,7 @@ router.delete(
 
 router.put(
   "/user/update/:id",
-  requireSignin,
+
   (req, res, next) =>
     req.params.id !== req.user._id ? canWriteUser(req, res, next) : next(),
   upload.single("image"),

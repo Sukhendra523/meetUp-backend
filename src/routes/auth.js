@@ -7,7 +7,9 @@ const {
   resetPassword,
   facebookSignin,
   activateAccount,
+  registerAccount,
 } = require("../controller/auth");
+
 const {
   validateSignupRequest,
   validateSigninRequest,
@@ -22,7 +24,7 @@ router.post("/signup", validateSignupRequest, isRequestValidated, signup);
 router.post("/signin", validateSigninRequest, isRequestValidated, signin);
 router.post("/facebookLogin", facebookSignin);
 router.post("/auth/activate", activateAccount);
-
+router.post("/register", registerAccount);
 router.post(
   "/forget-password",
   validateForgetRequest,
