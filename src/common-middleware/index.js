@@ -39,3 +39,16 @@ exports.canWriteFeature = (req, res, next) => {
   }
   next();
 };
+
+exports.canWriteMeeting = (req, res, next) => {
+  if (!req.user.role.permissions.includes(permissionsConstant.WRITE_MEETING)) {
+    return res.status(400).json({ message: " Acces denied" });
+  }
+  next();
+};
+exports.canManageMeeting = (req, res, next) => {
+  if (!req.user.role.permissions.includes(permissionsConstant.MANAGE_MEETING)) {
+    return res.status(400).json({ message: " Acces denied" });
+  }
+  next();
+};

@@ -3,16 +3,11 @@ const featureSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true,
   },
+  key: [{ type: String, required: true, unique: true }],
   enable: {
     type: Boolean,
     default: true,
-  },
-  privacy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Role",
-    required: true,
   },
 });
 

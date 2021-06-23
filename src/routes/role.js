@@ -1,5 +1,5 @@
 const express = require("express");
-const { requireSignin } = require("../common-middleware");
+const { requireSignin, canWriteRole } = require("../common-middleware");
 const {
   createInitialRole,
   createRole,
@@ -16,10 +16,12 @@ router.post("/createInitialRole", createInitialRole);
 router.post("/createSuperAdmin", createSuperAdminRole);
 ////////////////////////////////////////////////////////
 
-router.post("/roles", requireSignin, canWriteRole, getAllRole);
-router.post("/role/:id", requireSignin, canWriteRole, getRoleDetails);
-router.post("/role/create", requireSignin, canWriteRole, createRole);
-router.patch("/role/update/:id", requireSignin, canWriteRole, updateRole);
-router.delete("/role/delete/:id", requireSignin, canWriteRole, deleteRole);
+router.all("/", requireSignin, canWriteRole);
+
+router.post("/roles", getAllRole);
+router.post("/role/:id", getRoleDetails);
+router.post("/role/create", createRole);
+router.patch("/role/update/:id", updateRole);
+router.delete("/role/delete/:id", deleteRole);
 
 module.exports = router;

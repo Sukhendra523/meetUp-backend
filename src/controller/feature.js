@@ -1,5 +1,29 @@
 const Feature = require("../models/feature");
 
+// add new feature
+exports.createFeature = async (req, res) => {
+  try {
+    const { name, key, enable } = req.body;
+    const newfeature = new Feature({ name, key, enable });
+    const feature = await newfeature.save();
+    if (feature) {
+      res.status(201).json({
+        feature,
+        message: "Feature added successfully",
+      });
+    } else {
+      res.status(400).json({
+        message: "Unable to Create",
+      });
+    }
+  } catch (error) {
+    res.status(400).json({
+      error: error.message,
+      message: "Unable to create Feature",
+    });
+  }
+};
+
 // get all features
 exports.getAllFeatures = async (req, res) => {
   try {
@@ -39,36 +63,12 @@ exports.getFeatureDetails = async (req, res) => {
   }
 };
 
-// add new feature
-exports.createFeature = async (req, res) => {
-  try {
-    const feature = new Feature(req.body);
-    if (feature) {
-      const feature = await newFeature.save();
-      if (feature) {
-        res.status(201).json({
-          savedFeature,
-          message: "Feature added successfully",
-        });
-      } else {
-        res.status(400).json({
-          message: "Unable to Create",
-        });
-      }
-    }
-  } catch (error) {
-    res.status(400).json({
-      error: error.message,
-      message: "Unable to create Feature",
-    });
-  }
-};
-
 // updating a feature
 exports.updateFeature = async (req, res) => {
   try {
-    const id = req.params.id;
-    const feature = await Feature.findByIdAndUpdate(id, req.body);
+    const feature = await Feature.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
     if (feature) {
       res.status(200).json({ feature, message: "Updated successfully" });
     } else {

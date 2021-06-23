@@ -25,7 +25,7 @@ exports.facebookSignin = async (req, res) => {
     );
     if (user) {
       const token = jwt.sign(
-        { _id: user._id, role: user.role },
+        { email: user.email, _id: user._id, role: user.role },
         process.env.SECRET_KEY,
         { expiresIn: "1d" }
       );
@@ -38,12 +38,12 @@ exports.facebookSignin = async (req, res) => {
         username,
         password: { oauthPassword: hashPassword, userPassword: hashPassword },
       });
-      const user = await newUser
-        .save()
-        .populate("role", "_id name permissions enable");
+      const user = await (await newUser.save())
+        .populate("role", "_id name permissions enable")
+        .execPopulate();
       if (user) {
         const token = jwt.sign(
-          { _id: user._id, role: user.role },
+          { email: user.email, _id: user._id, role: user.role },
           process.env.SECRET_KEY,
           { expiresIn: "1d" }
         );
@@ -84,7 +84,7 @@ exports.signup = async (req, res) => {
         .execPopulate();
       if (user) {
         const token = jwt.sign(
-          { _id: user._id, role: user.role },
+          { email: user.email, _id: user._id, role: user.role },
           process.env.SECRET_KEY,
           { expiresIn: "1d" }
         );
@@ -109,7 +109,7 @@ exports.signin = async (req, res) => {
     if (user) {
       if (user.authenticate(password)) {
         const token = jwt.sign(
-          { _id: user._id, role: user.role },
+          { email: user.email, _id: user._id, role: user.role },
           process.env.SECRET_KEY,
           { expiresIn: "1d" }
         );

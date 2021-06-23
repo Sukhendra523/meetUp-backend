@@ -11,8 +11,8 @@ env.config();
 const authRoutes = require("./routes/auth");
 const roleRoutes = require("./routes/role");
 const userRoutes = require("./routes/user");
-
 const featureRoutes = require("./routes/feature");
+const meetingRoutes = require("./routes/meeting");
 
 //using express application
 const app = express();
@@ -45,11 +45,11 @@ app.use(express.json());
 app.use("/public", express.static(path.join(__dirname, "uploads")));
 
 //rest api routes
-
 app.use("/api", authRoutes);
-app.use("/api", featureRoutes);
-app.use("/api", roleRoutes);
 app.use("/api", userRoutes);
+app.use("/api", roleRoutes);
+app.use("/api", featureRoutes);
+app.use("/api", meetingRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`SERVER is running at PORT = ${process.env.PORT}`);
