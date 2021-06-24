@@ -1,9 +1,15 @@
 const express = require("express");
+const multer = require("multer");
+const shortid = require("shortid");
+const path = require("path");
+
 const {
   requireSignin,
   canWriteMeeting,
   canManageMeeting,
+  canHostMeeting,
 } = require("../common-middleware");
+
 const {
   createMeeting,
   deleteMeeting,
@@ -11,7 +17,22 @@ const {
   getMeetingByDateAndEmail,
   getMeetingDetails,
   getAllMeeting,
+  uploadMeetingDocuments,
 } = require("../controller/meeting");
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(
+      null,
+      path.join(path.dirname(path.dirname(__dirname)), "public/documents")
+    );
+  },
+  filename: function (req, file, cb) {
+    cb(null, shortid.generate() + "-" + file.originalname);
+  },
+});
+
+const upload = multer({ storage });
 
 const router = express.Router();
 
@@ -19,6 +40,7 @@ const checkMeetingAccess = (req, res, next) =>
   req.body.createdBy !== req.user._id
     ? canManageMeeting(req, res, next)
     : canWriteMeeting(req, res, next);
+
 router.use("/", requireSignin);
 
 router.param("id", checkMeetingAccess);
@@ -47,5 +69,12 @@ router.delete("/meeting/delete/:id", deleteMeeting);
 
 // update Meeting
 router.put("/meeting/update/:id", updateMeeting);
+
+// uplaod Document
+router.post(
+  "/meeting/document/upload/:mid",
+  upload.single("document"),
+  uploadMeetingDocuments
+);
 
 module.exports = router;

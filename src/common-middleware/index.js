@@ -52,3 +52,10 @@ exports.canManageMeeting = (req, res, next) => {
   }
   next();
 };
+
+exports.canHostMeeting = (req, res, next) => {
+  if (!req.user.role.permissions.includes(permissionsConstant.HOST_MEETING)) {
+    return res.status(400).json({ message: " Acces denied" });
+  }
+  next();
+};

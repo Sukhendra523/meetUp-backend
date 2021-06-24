@@ -1,6 +1,10 @@
 const Meeting = require("../models/meeting");
 // import endOfDayfrom 'date-fns/endOfDay'
 // import startOfDay from 'date-fns/startOfDay'
+const env = require("dotenv");
+
+//Environment Variable
+env.config();
 
 exports.createMeeting = async (req, res) => {
   try {
@@ -145,6 +149,31 @@ exports.updateMeeting = async (req, res) => {
       res
         .status(200)
         .json({ message: "Meeting Updated Successfully", meeting });
+  } catch (error) {
+    res.status(400).json({
+      error: error.message,
+      message: "Somthing goes wrong !! tyr again later",
+    });
+  }
+};
+
+exports.uploadMeetingDocuments = async (req, res) => {
+  try {
+    const meeting = await Meeting.findByIdAndUpdate(
+      req.params.mid,
+      {
+        $push: {
+          documents:
+            process.env.API + "/uploads/ducuments/" + req.file.filename,
+        },
+      },
+      { new: true }
+    );
+    meeting &&
+      res.status(200).json({
+        message: "Document Uploaded Successfully",
+        documents: meeting.documents,
+      });
   } catch (error) {
     res.status(400).json({
       error: error.message,

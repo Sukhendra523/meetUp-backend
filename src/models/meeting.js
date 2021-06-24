@@ -35,6 +35,7 @@ const meetingSchema = new mongoose.Schema(
     },
     password: String,
     features: [String],
+    documents: [String],
   },
   { timestamps: true }
 );
