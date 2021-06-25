@@ -42,7 +42,10 @@ mongoose
 //middlewares
 app.use(cors());
 app.use(express.json());
-app.use("/public", express.static(path.join(__dirname, "uploads")));
+app.use(
+  "/uploads",
+  express.static(path.join(path.dirname(__dirname), "/public"))
+);
 
 //rest api routes
 app.use("/api", authRoutes);

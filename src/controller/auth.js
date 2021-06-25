@@ -41,12 +41,36 @@ exports.facebookSignin = async (req, res) => {
         .populate("role", "_id name permissions enable")
         .execPopulate();
       if (user) {
+        const {
+          _id,
+          email,
+          username,
+          fullname,
+          firstName,
+          lastName,
+          conatct,
+          image,
+          role,
+        } = user;
         const token = jwt.sign(
-          { email: user.email, _id: user._id, role: user.role },
+          { email: email, _id: _id, role: role },
           process.env.SECRET_KEY,
           { expiresIn: "1d" }
         );
-        res.status(200).json({ token, user });
+        res.status(200).json({
+          token,
+          user: {
+            _id,
+            email,
+            username,
+            fullname,
+            firstName,
+            lastName,
+            conatct,
+            image,
+            role,
+          },
+        });
       }
     }
   } catch (error) {
@@ -85,8 +109,19 @@ exports.signup = async (req, res) => {
         .execPopulate();
 
       if (user) {
+        const {
+          _id,
+          email,
+          username,
+          fullname,
+          firstName,
+          lastName,
+          conatct,
+          image,
+          role,
+        } = user;
         const token = jwt.sign(
-          { email: user.email, _id: user._id, role: user.role },
+          { email: email, _id: _id, role: role },
           process.env.SECRET_KEY,
           { expiresIn: "1d" }
         );
@@ -112,19 +147,38 @@ exports.signup = async (req, res) => {
             min-width: 90px;" href="${process.env.ClIENT_URL}/activate/${token}">Activate Account</a></div></div>`,
         };
 
-        const body = await mg.messages().send(data);
-        body
-          ? res.status(200).json({
-              message: "Email has sent, kindly activate your Account",
-              token,
-              user,
-            })
-          : res.status(200).json({
-              message:
-                "Unable to send Email to verify Account, kindly activate your Account",
-              token,
-              user,
-            });
+        res.status(200).json({
+          message:
+            "Unable to send Email to verify Account, kindly activate your Account",
+          token,
+          user: {
+            _id,
+            email,
+            username,
+            fullname,
+            firstName,
+            lastName,
+            conatct,
+            image,
+            role,
+          },
+        });
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        /////for development purpose i have commented activate account code to avoid intruption////////
+        // const body = await mg.messages().send(data);
+        // body
+        //   ? res.status(200).json({
+        //       message: "Email has sent, kindly activate your Account",
+        //       token,
+        //       user,
+        //     })
+        //   : res.status(200).json({
+        //       message:
+        //         "Unable to send Email to verify Account, kindly activate your Account",
+        //       token,
+        //       user,
+        //     });
+        ///////////////////////////////////////////////////////////////////////////////////////////
       }
     }
   } catch (error) {
@@ -170,8 +224,19 @@ exports.registerAccount = async (req, res) => {
       .execPopulate();
 
     if (user) {
+      const {
+        _id,
+        email,
+        username,
+        fullname,
+        firstName,
+        lastName,
+        conatct,
+        image,
+        role,
+      } = user;
       const token = jwt.sign(
-        { email: user.email, _id: user._id, role: user.role },
+        { email: email, _id: _id, role: role },
         process.env.SECRET_KEY,
         { expiresIn: "1d" }
       );
@@ -201,13 +266,33 @@ exports.registerAccount = async (req, res) => {
         ? res.status(200).json({
             message: "Email has sent, kindly activate your Account",
             token,
-            user,
+            user: {
+              _id,
+              email,
+              username,
+              fullname,
+              firstName,
+              lastName,
+              conatct,
+              image,
+              role,
+            },
           })
         : res.status(200).json({
             message:
               "Unable to send Email to verify Account, kindly activate your Account",
             token,
-            user,
+            user: {
+              _id,
+              email,
+              username,
+              fullname,
+              firstName,
+              lastName,
+              conatct,
+              image,
+              role,
+            },
           });
     }
   } catch (error) {
@@ -238,13 +323,39 @@ exports.signin = async (req, res) => {
     }).populate("role", "_id name permissions enable");
 
     if (user) {
+      const {
+        _id,
+        email,
+        username,
+        fullname,
+        firstName,
+        lastName,
+        conatct,
+        image,
+        role,
+      } = user;
       if (user.authenticate(password)) {
         const token = jwt.sign(
-          { email: user.email, _id: user._id, role: user.role },
+          { email: email, _id: _id, role: role },
           process.env.SECRET_KEY,
           { expiresIn: "1d" }
         );
-        res.status(200).json({ token, user });
+        res
+          .status(200)
+          .json({
+            token,
+            user: {
+              _id,
+              email,
+              username,
+              fullname,
+              firstName,
+              lastName,
+              conatct,
+              image,
+              role,
+            },
+          });
       } else {
         res.status(400).json({ message: "Incorrect Password" });
       }

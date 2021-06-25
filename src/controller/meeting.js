@@ -182,7 +182,7 @@ exports.uploadMeetingDocuments = async (req, res) => {
   }
 };
 
-exports.updateMeetingSetting = async (req, res) => {
+exports.updateMeetingFeatures = async (req, res) => {
   try {
     const { features, password } = req.body;
     const meeting = await Meeting.findByIdAndUpdate(

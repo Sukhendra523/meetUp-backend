@@ -18,6 +18,7 @@ const {
   getMeetingDetails,
   getAllMeeting,
   uploadMeetingDocuments,
+  updateMeetingFeatures,
 } = require("../controller/meeting");
 
 const storage = multer.diskStorage({
@@ -69,6 +70,9 @@ router.delete("/meeting/delete/:id", deleteMeeting);
 
 // update Meeting
 router.put("/meeting/update/:id", updateMeeting);
+
+// update meeting Features
+router.put("/meeting/update/:id", updateMeetingFeatures);
 
 // uplaod Document
 router.post(

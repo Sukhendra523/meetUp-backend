@@ -68,7 +68,10 @@ exports.createUser = async (req, res) => {
 // getALLUser
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.find(
+      {},
+      "_id email username fullname firstName lastName conatct image role"
+    ).populate("role", "_id name permissions enable");
     if (users.length > 0) {
       res.status(200).json(users);
     } else {
@@ -84,7 +87,10 @@ exports.getAllUsers = async (req, res) => {
 
 exports.getUserDetails = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(
+      req.params.id,
+      "_id email username fullname firstName lastName conatct image role"
+    );
     if (user) {
       res.status(200).json(user);
     } else {
