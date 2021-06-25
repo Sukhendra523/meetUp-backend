@@ -31,8 +31,8 @@ exports.createSuperAdminRole = async (req, res) => {
 exports.getAllRole = async (req, res) => {
   try {
     const roles = await Role.find();
-    if (role) {
-      res.status(201).json(roles);
+    if (roles) {
+      res.status(200).json(roles);
     } else {
       res.status(400).json({ message: "No roles Found" });
     }

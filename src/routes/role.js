@@ -18,10 +18,10 @@ router.post("/createSuperAdmin", createSuperAdminRole);
 
 router.use("/", requireSignin, canWriteRole);
 
-router.post("/roles", getAllRole);
-router.post("/role/:id", getRoleDetails);
+router.get("/roles", getAllRole);
 router.post("/role/create", createRole);
-router.patch("/role/update/:id", updateRole);
+router.put("/role/update/:id", updateRole);
 router.delete("/role/delete/:id", deleteRole);
+router.get("/role/:id", getRoleDetails);
 
 module.exports = router;

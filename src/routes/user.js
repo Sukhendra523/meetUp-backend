@@ -38,13 +38,6 @@ router.post("/user/create", canWriteUser, createUser);
 router.get("/users", canReadUser, getAllUsers);
 
 router.get(
-  "/user/:id",
-  (req, res, next) =>
-    req.params.id !== req.user._id ? canReadUser(req, res, next) : next(),
-  getUserDetails
-);
-
-router.get(
   "/users/searchEmails/:input",
 
   canReadUser,
@@ -76,6 +69,12 @@ router.put(
     req.params.id !== req.user._id ? canWriteUser(req, res, next) : next(),
   upload.single("image"),
   updateUser
+);
+router.get(
+  "/user/:id",
+  (req, res, next) =>
+    req.params.id !== req.user._id ? canReadUser(req, res, next) : next(),
+  getUserDetails
 );
 
 module.exports = router;

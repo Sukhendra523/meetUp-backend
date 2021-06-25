@@ -167,7 +167,7 @@ exports.searchUser = async (req, res) => {
 };
 
 exports.updateUser = (req, res) => {
-  const { firstName, lastName, username, email } = req.body;
+  const { firstName, lastName, username, email, role } = req.body;
   let user = {};
   if (req.file) {
     user.image = process.env.API + "/uploads/images/" + req.file.filename;
@@ -177,12 +177,13 @@ exports.updateUser = (req, res) => {
       lastName,
       username,
       email,
+      role,
     };
   }
   User.findByIdAndUpdate(req.params.id, user, { new: true }, (error, user) => {
     if (error) return res.status(400).json(error);
     if (user) {
-      res.status(200).json({ message: "Updated Successfully", user });
+      res.status(200).json({ message: "Updated Successfully" });
     } else {
       res
         .status(400)
