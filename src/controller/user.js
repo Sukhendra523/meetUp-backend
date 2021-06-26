@@ -90,7 +90,7 @@ exports.getUserDetails = async (req, res) => {
     const user = await User.findById(
       req.params.id,
       "_id email username fullname firstName lastName conatct image role"
-    );
+    ).populate("role", "_id name permissions enable");
     if (user) {
       res.status(200).json(user);
     } else {
@@ -124,7 +124,7 @@ exports.getUserProfile = async (req, res) => {
 
 exports.searchUserEmails = async (req, res) => {
   const emails = await User.find(
-    { email: { $regex: req.params.input } },
+    { email: { $regex: req.params.query } },
     "email"
   );
   try {
@@ -146,17 +146,18 @@ exports.searchUser = async (req, res) => {
     const users = await User.find(
       {
         $or: [
-          { email: { $regex: req.params.input } },
-          { firstName: { $regex: req.params.input } },
-          { userName: { $regex: req.params.input } },
+          { email: { $regex: req.params.query } },
+          { firstName: { $regex: req.params.query } },
+          { username: { $regex: req.params.query } },
         ],
       },
-      "firstName lastName username email role"
-    );
+      "_id email username fullname firstName lastName conatct image role"
+    ).populate("role", "_id name permissions enable");
+    // users.filter(({email,firstName,username,role:{name}})=>())
     if (users) {
       res.status(200).json(users);
     } else {
-      res.status(400).json({ message: `no emails found` });
+      res.status(400).json({ message: `Sorry !! No user found` });
     }
   } catch (error) {
     res.status(400).json({
@@ -166,30 +167,44 @@ exports.searchUser = async (req, res) => {
   }
 };
 
-exports.updateUser = (req, res) => {
-  const { firstName, lastName, username, email, role } = req.body;
-  let user = {};
-  if (req.file) {
-    user.image = process.env.API + "/uploads/images/" + req.file.filename;
-  } else {
-    user = {
-      firstName,
-      lastName,
-      username,
-      email,
-      role,
-    };
-  }
-  User.findByIdAndUpdate(req.params.id, user, { new: true }, (error, user) => {
-    if (error) return res.status(400).json(error);
-    if (user) {
-      res.status(200).json({ message: "Updated Successfully" });
-    } else {
-      res
-        .status(400)
-        .json({ message: "Something Goes wrong Try Again latter" });
+exports.updateUserProfile = (req, res) => {
+  console.log(req.file);
+  const image = process.env.API + "/uploads/images/" + req.file.filename;
+  User.findByIdAndUpdate(
+    req.params.id,
+    { image: image },
+    { new: true },
+    (error, user) => {
+      if (error) return res.status(400).json(error);
+      if (user) {
+        res.status(200).json({ message: "User Profile Updated Successfully" });
+      } else {
+        res
+          .status(400)
+          .json({ message: "Something Goes wrong Try Again latter" });
+      }
     }
-  });
+  );
+};
+
+exports.updateUser = (req, res) => {
+  const { firstName, lastName, username, email, role, contact } = req.body;
+
+  User.findByIdAndUpdate(
+    req.params.id,
+    { firstName, lastName, username, email, contact, role },
+    { new: true },
+    (error, user) => {
+      if (error) return res.status(400).json(error);
+      if (user) {
+        res.status(200).json({ message: "Updated Successfully" });
+      } else {
+        res
+          .status(400)
+          .json({ message: "Something Goes wrong Try Again latter" });
+      }
+    }
+  );
 };
 
 exports.deleteUser = async (req, res) => {

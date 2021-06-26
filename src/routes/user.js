@@ -17,6 +17,7 @@ const {
   searchUser,
   deleteUser,
   createUser,
+  updateUserProfile,
 } = require("../controller/user");
 
 const storage = multer.diskStorage({
@@ -38,13 +39,13 @@ router.post("/user/create", canWriteUser, createUser);
 router.get("/users", canReadUser, getAllUsers);
 
 router.get(
-  "/users/searchEmails/:input",
+  "/users/searchEmails/:query",
 
   canReadUser,
   searchUserEmails
 );
 
-router.get("/users/search/:input", canReadUser, searchUser);
+router.get("/users/search/:query", canReadUser, searchUser);
 
 router.get(
   "/user/profile/:id",
@@ -67,11 +68,20 @@ router.put(
 
   (req, res, next) =>
     req.params.id !== req.user._id ? canWriteUser(req, res, next) : next(),
-  upload.single("image"),
   updateUser
 );
+
+router.put(
+  "/user/updateProfile/:id",
+
+  (req, res, next) =>
+    req.params.id !== req.user._id ? canWriteUser(req, res, next) : next(),
+  upload.single("image"),
+  updateUserProfile
+);
+
 router.get(
-  "/user/:id",
+  "/user/getUserDetails/:id",
   (req, res, next) =>
     req.params.id !== req.user._id ? canReadUser(req, res, next) : next(),
   getUserDetails
