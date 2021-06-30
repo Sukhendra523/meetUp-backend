@@ -17,18 +17,24 @@ exports.createMeeting = async (req, res) => {
         roomName,
         title,
         description,
-        inviteList,
+        attendees,
         // schedule,
         createdBy,
         features,
-        password,
       } = req.body;
       // let start = schedule.start;
       // let end = schedule.end;
       //////////// For Development Purpose////////////////////
+      const d = new Date();
+      console.log("d", d);
       let start = new Date();
-      console.log("date", start);
-      let end = start.setDate(start.getHours() + 1);
+      console.log("start", start);
+      let [month, date, year] = start.toLocaleDateString("en-IN").split("/");
+      let [hour] = start.toLocaleTimeString("en-US").split(/:| /);
+      console.log("month, date, year, hour", month, date, year, hour);
+      let end = new Date(year, month, date, parseInt(hour) + 2, 0, 0);
+      console.log("end", end);
+
       /////////////////////////////////////////////////////
       let scheduleDate = {
         start,
@@ -38,11 +44,10 @@ exports.createMeeting = async (req, res) => {
         roomName,
         title,
         description,
-        inviteList,
+        attendees,
         schedule: scheduleDate,
         createdBy,
         features,
-        password,
       }).save();
       meeting &&
         res
@@ -61,7 +66,9 @@ exports.getAllMeeting = async (req, res) => {
   try {
     // let start = new Date(req.params.meetingDate);
     // console.log("Start:::::::::::::::", start);
-    const meetings = await Meeting.find();
+    const meetings = await Meeting.find()
+      .populate("createdBy", "fullName username email image")
+      .populate("attendees", "fullName username email image");
     meetings.length > 0
       ? res.status(200).json(meetings)
       : res.status(400).json({ message: "no meetings found" });
