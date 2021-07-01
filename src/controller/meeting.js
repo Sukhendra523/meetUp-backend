@@ -35,11 +35,12 @@ exports.createMeeting = async (req, res) => {
       let end = new Date(year, month, date, parseInt(hour) + 2, 0, 0);
       console.log("end", end);
 
-      /////////////////////////////////////////////////////
       let scheduleDate = {
         start,
         end,
       };
+      /////////////////////////////////////////////////////
+
       const meeting = await new Meeting({
         roomName,
         title,
