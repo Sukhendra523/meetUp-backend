@@ -14,7 +14,9 @@ exports.createUser = async (req, res) => {
     const { email, role } = req.body;
     const user = await User.findOne({ email });
     if (user) {
-      return res.status(400).json({ message: "User already exists" });
+      return res
+        .status(400)
+        .json({ status: 400, success: false, message: "User already exists" });
     } else {
       const registerToken = jwt.sign({ email, role }, process.env.SECRET_KEY, {
         expiresIn: "1d",
@@ -53,12 +55,16 @@ exports.createUser = async (req, res) => {
         const body = await mg.messages().send(data);
         body &&
           res.status(200).json({
+            status: 200,
+            success: true,
             message: `Email has sent to ${email},now user can register`,
           });
       }
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -73,12 +79,16 @@ exports.getAllUsers = async (req, res) => {
       "_id email username fullname firstName lastName conatct image role"
     ).populate("role", "_id name permissions enable");
     if (users.length > 0) {
-      res.status(200).json(users);
+      res.status(200).json({ status: 200, success: true, users: users });
     } else {
-      res.status(400).json({ message: `No User Found` });
+      res
+        .status(404)
+        .json({ status: 404, success: false, message: `No User Found` });
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -92,12 +102,16 @@ exports.getUserDetails = async (req, res) => {
       "_id email username fullname firstName lastName conatct image role"
     ).populate("role", "_id name permissions enable");
     if (user) {
-      res.status(200).json(user);
+      res.status(200).json({ status: 200, success: true, user });
     } else {
-      res.status(400).json({ message: "No user Found" });
+      res
+        .status(404)
+        .json({ status: 404, success: false, message: "No user Found" });
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -108,14 +122,18 @@ exports.getUserProfile = async (req, res) => {
   try {
     const { image } = await User.findById(req.params.id, { image: 1, _id: 0 });
     if (image) {
-      res.status(200).json(image);
+      res.status(200).json({ status: 200, success: true, image });
     } else {
-      res
-        .status(400)
-        .json({ message: "Something Goes wrong Try Again latter" });
+      res.status(404).json({
+        status: 404,
+        success: false,
+        message: "Something Goes wrong Try Again latter",
+      });
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -129,12 +147,16 @@ exports.searchUserEmails = async (req, res) => {
   );
   try {
     if (emails) {
-      res.status(200).json(emails);
+      res.status(200).json({ status: 200, success: true, emails });
     } else {
-      res.status(400).json({ message: `no emails found` });
+      res
+        .status(404)
+        .json({ status: 404, success: false, message: `no emails found` });
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -155,9 +177,13 @@ exports.searchUser = async (req, res) => {
     ).populate("role", "_id name permissions enable");
     // users.filter(({email,firstName,username,role:{name}})=>())
     if (users) {
-      res.status(200).json(users);
+      res.status(200).json({ status: 200, success: true, users });
     } else {
-      res.status(400).json({ message: `Sorry !! No user found` });
+      res.status(404).json({
+        status: 404,
+        success: false,
+        message: `Sorry !! No user found`,
+      });
     }
   } catch (error) {
     res.status(400).json({
@@ -175,13 +201,24 @@ exports.updateUserProfile = (req, res) => {
     { image: image },
     { new: true },
     (error, user) => {
-      if (error) return res.status(400).json(error);
+      if (error)
+        return res.status(400).json({ status: 400, success: false, error });
       if (user) {
-        res.status(200).json({ message: "User Profile Updated Successfully" });
+        res
+          .status(200)
+          .json({
+            status: 200,
+            success: true,
+            message: "User Profile Updated Successfully",
+          });
       } else {
         res
-          .status(400)
-          .json({ message: "Something Goes wrong Try Again latter" });
+          .status(404)
+          .json({
+            status: 404,
+            success: false,
+            message: "Something Goes wrong Try Again latter",
+          });
       }
     }
   );
@@ -195,13 +232,18 @@ exports.updateUser = (req, res) => {
     { firstName, lastName, username, email, contact, role },
     { new: true },
     (error, user) => {
-      if (error) return res.status(400).json(error);
+      if (error)
+        return res.status(400).json({ status: 400, success: false, error });
       if (user) {
         res.status(200).json({ message: "Updated Successfully" });
       } else {
         res
           .status(400)
-          .json({ message: "Something Goes wrong Try Again latter" });
+          .json({
+            status: 400,
+            success: false,
+            message: "Something Goes wrong Try Again latter",
+          });
       }
     }
   );
@@ -211,14 +253,22 @@ exports.deleteUser = async (req, res) => {
   try {
     const user = await User.findByIdAndRemove(req.params.id);
     if (user) {
-      res.status(200).json({ message: "Deleted Successfully" });
+      res
+        .status(200)
+        .json({ status: 200, success: true, message: "Deleted Successfully" });
     } else {
       res
-        .status(400)
-        .json({ message: "Something Goes wrong Try Again latter" });
+        .status(404)
+        .json({
+          status: 404,
+          success: false,
+          message: "Something Goes wrong Try Again latter",
+        });
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });

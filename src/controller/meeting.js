@@ -72,7 +72,7 @@ exports.getAllMeeting = async (req, res) => {
       .populate("attendees", "fullName username email image");
     meetings.length > 0
       ? res.status(200).json(meetings)
-      : res.status(400).json({ message: "no meetings found" });
+      : res.status(400).json({ message: "No meetings found" });
   } catch (error) {
     res.status(400).json({
       error: error.message,

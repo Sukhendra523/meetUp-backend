@@ -7,6 +7,7 @@ const mailgun = require("mailgun-js");
 const DOMAIN = "sandboxf74c8ab61afc4c76934293627a5a58c1.mailgun.org";
 const mg = mailgun({ apiKey: process.env.MAILGUN_APIKEY, domain: DOMAIN });
 const fetch = require("node-fetch");
+const otpGenerator = require("otp-generator");
 
 //Environment Variable
 env.config();
@@ -28,7 +29,7 @@ exports.facebookSignin = async (req, res) => {
         process.env.SECRET_KEY,
         { expiresIn: "1d" }
       );
-      res.status(200).json({ token, user });
+      res.status(200).json({ status: 200, success: true, token, user });
     } else {
       const password = email + process.env.SECRET_KEY;
       const hashPassword = await bcrypt.hash(password, 10);
@@ -57,7 +58,9 @@ exports.facebookSignin = async (req, res) => {
           process.env.SECRET_KEY,
           { expiresIn: "1d" }
         );
-        res.status(200).json({
+        res.status(201).json({
+          status: 201,
+          success: true,
           token,
           user: {
             _id,
@@ -75,6 +78,8 @@ exports.facebookSignin = async (req, res) => {
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -91,7 +96,9 @@ exports.signup = async (req, res) => {
     );
 
     if (emailExits || usernameExits) {
-      return res.status(400).json({
+      return res.status(404).json({
+        status: 404,
+        success: false,
         message:
           "This " + (emailExits ? "email" : "username") + " already Exists",
       });
@@ -147,7 +154,9 @@ exports.signup = async (req, res) => {
             min-width: 90px;" href="${process.env.ClIENT_URL}/activate/${token}">Activate Account</a></div></div>`,
         };
 
-        res.status(200).json({
+        res.status(201).json({
+          status: 201,
+          success: true,
           message:
             "Unable to send Email to verify Account, kindly activate your Account",
           token,
@@ -183,6 +192,8 @@ exports.signup = async (req, res) => {
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -263,7 +274,9 @@ exports.registerAccount = async (req, res) => {
 
       const body = await mg.messages().send(data);
       body
-        ? res.status(200).json({
+        ? res.status(201).json({
+            status: 201,
+            success: true,
             message: "Email has sent, kindly activate your Account",
             token,
             user: {
@@ -278,7 +291,9 @@ exports.registerAccount = async (req, res) => {
               role,
             },
           })
-        : res.status(200).json({
+        : res.status(201).json({
+            status: 201,
+            success: true,
             message:
               "Unable to send Email to verify Account, kindly activate your Account",
             token,
@@ -297,6 +312,8 @@ exports.registerAccount = async (req, res) => {
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -308,9 +325,17 @@ exports.activateAccount = async (req, res) => {
   if (token) {
     const user = jwt.verify(token, process.env.SECRET_KEY);
     if (user) {
-      res.status(200).json({ message: "Accounted Activated Successfully " });
+      res.status(200).json({
+        status: 200,
+        success: true,
+        message: "Accounted Activated Successfully ",
+      });
     } else {
-      return res.status(400).json({ message: "Incorrect or  Expired Link ." });
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Incorrect or  Expired Link .",
+      });
     }
   }
 };
@@ -340,30 +365,99 @@ exports.signin = async (req, res) => {
           process.env.SECRET_KEY,
           { expiresIn: "1d" }
         );
-        res
-          .status(200)
-          .json({
-            token,
-            user: {
-              _id,
-              email,
-              username,
-              fullname,
-              firstName,
-              lastName,
-              conatct,
-              image,
-              role,
-            },
-          });
+        res.status(200).json({
+          status: 200,
+          success: true,
+          token,
+          user: {
+            _id,
+            email,
+            username,
+            fullname,
+            firstName,
+            lastName,
+            conatct,
+            image,
+            role,
+          },
+        });
       } else {
-        res.status(400).json({ message: "Incorrect Password" });
+        res
+          .status(400)
+          .json({ status: 400, success: false, message: "Incorrect Password" });
       }
     } else {
-      return res.status(400).json({ message: "Incorrect Password or Id" });
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Incorrect Password or Id",
+      });
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
+      error: error.message,
+      message: "Somthing goes wrong !! tyr again later",
+    });
+  }
+};
+
+exports.forgetPasswordMobile = async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(310).json({
+        status: 310,
+        success: false,
+        message: "No user found with that email address.",
+      });
+    }
+    const resetToken = otpGenerator.generate(6, {
+      upperCase: false,
+      specialChars: false,
+      alphabets: false,
+    });
+    const { token } = await Token.findOneAndUpdate(
+      { userId: user._id },
+      { userId: user._id, token: resetToken },
+      { upsert: true, new: true }
+    );
+
+    if (token) {
+      let data = {
+        from: "ITAIMS info@itaims.com",
+        to: user.email,
+        subject: "Reset your password",
+        html: `<div style="margin: auto;width: 50%;">
+        <div style="padding-top:32px;text-align:center">
+        <h1><b>Reset your password</b></h1>
+        <h3>Please use below OTP to reset your password</h3> 
+        <p style="
+        line-height: 32px;
+        color: #000000;
+        font-weight: 400;
+        text-decoration: none;
+        font-size: 32px;
+        display: inline-block;
+        padding: 10px 24px;
+        background-color: #d3d3d3;
+        border-radius: 5px;
+        width: 200px;" >${token}</p></div></div>`,
+      };
+
+      const body = await mg.messages().send(data);
+      body &&
+        res.status(200).json({
+          status: 200,
+          success: true,
+          message: "Email has sent,kindly follow the instruction",
+        });
+    }
+  } catch (error) {
+    res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -374,9 +468,11 @@ exports.forgetPassword = async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
     if (!user) {
-      return res
-        .status(400)
-        .json({ message: "No user found with that email address." });
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "No user found with that email address.",
+      });
     }
     const resetToken = jwt.sign({ _id: user._id }, process.env.SECRET_KEY, {
       expiresIn: "20min",
@@ -412,11 +508,86 @@ exports.forgetPassword = async (req, res) => {
       const body = await mg.messages().send(data);
       body &&
         res.status(200).json({
+          status: 200,
+          success: true,
           message: "Email has sent,kindly follow the instruction",
         });
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
+      error: error.message,
+      message: "Somthing goes wrong !! tyr again later",
+    });
+  }
+};
+
+exports.resetPasswordMobile = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    let resetToken = await Token.findOne({ token: token });
+
+    if (!resetToken) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Invalid or expired password reset OTP",
+      });
+    }
+
+    const hashPassword = await bcrypt.hash(password, 10);
+    const user = await User.findOneAndUpdate(
+      { _id: resetToken.userId },
+      { password: hashPassword },
+      { new: true }
+    );
+    if (user) {
+      let data = {
+        from: "ITAIMS info@itaims.com",
+        to: user.email,
+        subject: "Your password has changed",
+        html: `<div style="margin: auto;width: 50%;">
+      <div style="padding-top:32px;text-align:center">
+      <h1><b>Your account password has changed</b></h1>
+      <h3>Hi ${user.firstName ? user.firstName : "user"}</h3>
+      <p>We’re confirming that you changed your ITAIMS account password for ${
+        user.email
+      }.</p>
+      <p>If you did not reset this password, please contact ITAIMS support immediately at info@itaims.com.
+      </p> 
+      <a style="
+      line-height: 16px;
+      color: #ffffff;
+      font-weight: 400;
+      text-decoration: none;
+      font-size: 14px;
+      display: inline-block;
+      padding: 10px 24px;
+      background-color: #4184f3;
+      border-radius: 5px;
+      min-width: 90px;" href="${process.env.ClIENT_URL}/contact">Contact</a>
+      <p>With love,
+      <br/>
+      The ITAIMS Team</p>
+      </div></div>`,
+      };
+
+      const body = await mg.messages().send(data);
+      body &&
+        res.status(200).json({
+          status: 200,
+          success: true,
+          message: "Password has Changed successfully",
+        });
+    } else {
+      return throwFailed(error, "Unable to send email.");
+    }
+  } catch (error) {
+    res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -476,6 +647,8 @@ exports.resetPassword = async (req, res) => {
       const body = await mg.messages().send(data);
       body &&
         res.status(200).json({
+          status: 200,
+          success: true,
           message: "Password has Changed successfully",
         });
     } else {
@@ -483,6 +656,8 @@ exports.resetPassword = async (req, res) => {
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });

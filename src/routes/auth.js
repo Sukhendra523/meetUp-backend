@@ -8,6 +8,8 @@ const {
   facebookSignin,
   activateAccount,
   registerAccount,
+  forgetPasswordMobile,
+  resetPasswordMobile,
 } = require("../controller/auth");
 
 const {
@@ -33,10 +35,23 @@ router.post(
 );
 
 router.post(
+  "/m-forget-password",
+  validateForgetRequest,
+  isRequestValidated,
+  forgetPasswordMobile
+);
+
+router.post(
   "/reset-password",
   validateResetPasswordRequest,
   isRequestValidated,
   resetPassword
+);
+router.post(
+  "/m-reset-password",
+  validateResetPasswordRequest,
+  isRequestValidated,
+  resetPasswordMobile
 );
 
 module.exports = router;
