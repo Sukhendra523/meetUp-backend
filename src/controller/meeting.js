@@ -11,7 +11,11 @@ exports.createMeeting = async (req, res) => {
     const meeting = await Meeting.findOne({ roomName: req.body.roomName });
     if (meeting) {
       console.log("roomName already exits");
-      return res.status(400).json({ message: "roomName already exits" });
+      return res.status(403).json({
+        status: 403,
+        success: false,
+        message: "roomName already exits",
+      });
     } else {
       const {
         roomName,
@@ -51,12 +55,17 @@ exports.createMeeting = async (req, res) => {
         features,
       }).save();
       meeting &&
-        res
-          .status(201)
-          .json({ message: `Meeting created successfully`, meeting });
+        res.status(201).json({
+          status: 201,
+          success: true,
+          message: `Meeting created successfully`,
+          meeting,
+        });
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -71,10 +80,14 @@ exports.getAllMeeting = async (req, res) => {
       .populate("createdBy", "fullName username email image")
       .populate("attendees", "fullName username email image");
     meetings.length > 0
-      ? res.status(200).json(meetings)
-      : res.status(400).json({ message: "No meetings found" });
+      ? res.status(200).json({ status: 200, success: true, meetings })
+      : res
+          .status(404)
+          .json({ status: 404, success: false, message: "No meetings found" });
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -101,10 +114,14 @@ exports.getMeetingByDateAndEmail = async (req, res) => {
       inviteList: req.body.email,
     });
     meetings.length > 0
-      ? res.status(200).json(meetings)
-      : res.status(400).json({ message: "no meetings found" });
+      ? res.status(200).json({ status: 200, success: true, meetings })
+      : res
+          .status(404)
+          .json({ status: 404, success: false, message: "no meetings found" });
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -113,12 +130,21 @@ exports.getMeetingByDateAndEmail = async (req, res) => {
 
 exports.deleteMeeting = async (req, res) => {
   try {
-    const meeting = await Meeting.findByIdAndRemove(req.params.id);
+    const meeting = await Meeting.findByIdAndDelete(req.params.id);
+    console.log(meeting);
     meeting
-      ? res.status(200).json({ message: "Meeting Successfully Deleted !" })
-      : res.status(400).json({ message: "Unable to Delete" });
+      ? res.status(200).json({
+          status: 200,
+          success: true,
+          message: "Meeting Successfully Deleted !",
+        })
+      : res
+          .status(501)
+          .json({ status: 501, success: false, message: "Unable to Delete" });
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -129,10 +155,14 @@ exports.getMeetingDetails = async (req, res) => {
   try {
     const meeting = await Meeting.findById(req.params.id);
     meeting
-      ? res.status(200).json(meeting)
-      : res.status(400).json({ message: "no meetings found" });
+      ? res.status(200).json({ status: 200, success: true, meeting })
+      : res
+          .status(404)
+          .json({ status: 404, success: false, message: "no meetings found" });
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -141,7 +171,7 @@ exports.getMeetingDetails = async (req, res) => {
 
 exports.updateMeeting = async (req, res) => {
   try {
-    const { title, description, inviteList, schedule } = req.body;
+    const { title, description, attendees, schedule } = req.body;
     // let start = new Date(schedule.start);
     // let end = new Date(schedule.end);
     // let scheduleDate = {
@@ -150,15 +180,20 @@ exports.updateMeeting = async (req, res) => {
     // };
     const meeting = await Meeting.findByIdAndUpdate(
       req.params.id,
-      { title, description, inviteList },
+      { title, description, attendees, schedule },
       { new: true }
     );
     meeting &&
-      res
-        .status(200)
-        .json({ message: "Meeting Updated Successfully", meeting });
+      res.status(200).json({
+        status: 200,
+        success: true,
+        message: "Meeting Updated Successfully",
+        meeting,
+      });
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -179,11 +214,15 @@ exports.uploadMeetingDocuments = async (req, res) => {
     );
     meeting &&
       res.status(200).json({
+        status: 200,
+        success: true,
         message: "Document Uploaded Successfully",
         documents: meeting.documents,
       });
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -199,11 +238,16 @@ exports.updateMeetingFeatures = async (req, res) => {
       { new: true }
     );
     meeting &&
-      res
-        .status(200)
-        .json({ message: "Meeting Seeting Updated Successfully", meeting });
+      res.status(200).json({
+        status: 200,
+        success: true,
+        message: "Meeting Seeting Updated Successfully",
+        meeting,
+      });
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });

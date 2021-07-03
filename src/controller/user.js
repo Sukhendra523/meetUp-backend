@@ -15,8 +15,8 @@ exports.createUser = async (req, res) => {
     const user = await User.findOne({ email });
     if (user) {
       return res
-        .status(400)
-        .json({ status: 400, success: false, message: "User already exists" });
+        .status(403)
+        .json({ status: 403, success: false, message: "User already exists" });
     } else {
       const registerToken = jwt.sign({ email, role }, process.env.SECRET_KEY, {
         expiresIn: "1d",
@@ -120,12 +120,21 @@ exports.getUserDetails = async (req, res) => {
 
 exports.getUserProfile = async (req, res) => {
   try {
-    const { image } = await User.findById(req.params.id, { image: 1, _id: 0 });
+    const { image } = await User.findById(
+      req.params.id,
+      { image: 1, _id: 0 },
+      { new: true }
+    );
     if (image) {
-      res.status(200).json({ status: 200, success: true, image });
+      res.status(200).json({
+        status: 200,
+        success: true,
+        image,
+        message: "Profile image updated",
+      });
     } else {
-      res.status(404).json({
-        status: 404,
+      res.status(501).json({
+        status: 501,
         success: false,
         message: "Something Goes wrong Try Again latter",
       });
@@ -187,6 +196,8 @@ exports.searchUser = async (req, res) => {
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -204,21 +215,17 @@ exports.updateUserProfile = (req, res) => {
       if (error)
         return res.status(400).json({ status: 400, success: false, error });
       if (user) {
-        res
-          .status(200)
-          .json({
-            status: 200,
-            success: true,
-            message: "User Profile Updated Successfully",
-          });
+        res.status(200).json({
+          status: 200,
+          success: true,
+          message: "User Profile Updated Successfully",
+        });
       } else {
-        res
-          .status(404)
-          .json({
-            status: 404,
-            success: false,
-            message: "Something Goes wrong Try Again latter",
-          });
+        res.status(501).json({
+          status: 501,
+          success: false,
+          message: "Something Goes wrong Try Again latter",
+        });
       }
     }
   );
@@ -235,15 +242,17 @@ exports.updateUser = (req, res) => {
       if (error)
         return res.status(400).json({ status: 400, success: false, error });
       if (user) {
-        res.status(200).json({ message: "Updated Successfully" });
+        res.status(200).json({
+          status: 200,
+          success: true,
+          message: "Updated Successfully",
+        });
       } else {
-        res
-          .status(400)
-          .json({
-            status: 400,
-            success: false,
-            message: "Something Goes wrong Try Again latter",
-          });
+        res.status(501).json({
+          status: 501,
+          success: false,
+          message: "Something Goes wrong Try Again latter",
+        });
       }
     }
   );
@@ -257,13 +266,11 @@ exports.deleteUser = async (req, res) => {
         .status(200)
         .json({ status: 200, success: true, message: "Deleted Successfully" });
     } else {
-      res
-        .status(404)
-        .json({
-          status: 404,
-          success: false,
-          message: "Something Goes wrong Try Again latter",
-        });
+      res.status(501).json({
+        status: 501,
+        success: false,
+        message: "Something Goes wrong Try Again latter",
+      });
     }
   } catch (error) {
     res.status(400).json({

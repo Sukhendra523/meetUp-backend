@@ -6,14 +6,14 @@ const userSchema = new mongoose.Schema(
     firstName: {
       type: String,
       trim: true,
-      min: 3,
-      max: 20,
+      minLength: 3,
+      maxLength: 20,
     },
     lastName: {
       type: String,
       trim: true,
-      min: 3,
-      max: 20,
+      minLength: 3,
+      maxLength: 20,
     },
     email: {
       type: String,
@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema(
       },
     },
     image: String,
-    contact: Number,
+    contact: { type: Number, min: 10 },
   },
   { timestamps: true }
 );

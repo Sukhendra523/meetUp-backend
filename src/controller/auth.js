@@ -96,8 +96,8 @@ exports.signup = async (req, res) => {
     );
 
     if (emailExits || usernameExits) {
-      return res.status(404).json({
-        status: 404,
+      return res.status(403).json({
+        status: 403,
         success: false,
         message:
           "This " + (emailExits ? "email" : "username") + " already Exists",
@@ -383,11 +383,11 @@ exports.signin = async (req, res) => {
         });
       } else {
         res
-          .status(400)
-          .json({ status: 400, success: false, message: "Incorrect Password" });
+          .status(403)
+          .json({ status: 403, success: false, message: "Incorrect Password" });
       }
     } else {
-      return res.status(400).json({
+      return res.status(403).json({
         status: 400,
         success: false,
         message: "Incorrect Password or Id",

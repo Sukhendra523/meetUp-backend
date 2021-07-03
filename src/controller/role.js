@@ -7,9 +7,9 @@ exports.createInitialRole = async (req, res) => {
     name: "user",
   }).save();
   if (initialRole) {
-    res.status(201).json(initialRole);
+    res.status(201).json({ status: 201, success: true, initialRole });
   } else {
-    res.status(400).json({ message: "not saved" });
+    res.status(501).json({ status: 501, success: false, message: "not saved" });
   }
 };
 ///////////////////////////////////////////////////
@@ -21,9 +21,9 @@ exports.createSuperAdminRole = async (req, res) => {
     enable: true,
   }).save();
   if (SuperAdminRole) {
-    res.status(201).json(SuperAdminRole);
+    res.status(201).json({ status: 201, success: true, SuperAdminRole });
   } else {
-    res.status(400).json({ message: "not saved" });
+    res.status(501).json({ status: 501, success: false, message: "not saved" });
   }
 };
 ////////////////////////////////////////////////////
@@ -32,12 +32,16 @@ exports.getAllRole = async (req, res) => {
   try {
     const roles = await Role.find();
     if (roles) {
-      res.status(200).json(roles);
+      res.status(200).json({ status: 200, success: true, roles });
     } else {
-      res.status(400).json({ message: "No roles Found" });
+      res
+        .status(404)
+        .json({ status: 404, success: false, message: "No roles Found" });
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -48,12 +52,16 @@ exports.getRoleDetails = async (req, res) => {
   try {
     const role = await Role.findById(req.params.id);
     if (role) {
-      res.status(201).json(role);
+      res.status(200).json({ status: 200, success: true, role });
     } else {
-      res.status(400).json({ message: "No role Found" });
+      res
+        .status(404)
+        .json({ status: 404, success: false, message: "No role Found" });
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -69,12 +77,16 @@ exports.createRole = async (req, res) => {
       enable,
     }).save();
     if (role) {
-      res.status(201).json(role);
+      res.status(201).json({ status: 201, success: true, role });
     } else {
-      res.status(400).json({ message: "Unable to create" });
+      res
+        .status(501)
+        .json({ status: 501, success: false, message: "Unable to create" });
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -87,12 +99,18 @@ exports.updateRole = async (req, res) => {
       new: true,
     });
     if (role) {
-      res.status(201).json({ message: "Updation successfull" });
+      res
+        .status(200)
+        .json({ status: 200, success: true, message: "Updation successfull" });
     } else {
-      res.status(400).json({ message: "Unable to update" });
+      res
+        .status(501)
+        .json({ status: 501, success: false, message: "Unable to update" });
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
@@ -103,12 +121,18 @@ exports.deleteRole = async (req, res) => {
   try {
     const role = await Role.findByIdAndRemove(req.params.id);
     if (role) {
-      res.status(200).json({ message: "Deleted Successfully" });
+      res
+        .status(200)
+        .json({ status: 200, success: true, message: "Deleted Successfully" });
     } else {
-      res.status(400).json({ message: "Unable to delete" });
+      res
+        .status(501)
+        .json({ status: 501, success: false, message: "Unable to delete" });
     }
   } catch (error) {
     res.status(400).json({
+      status: 400,
+      success: false,
       error: error.message,
       message: "Somthing goes wrong !! tyr again later",
     });
