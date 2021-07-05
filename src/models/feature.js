@@ -4,7 +4,29 @@ const featureSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  key: [{ type: String, required: true, unique: true }],
+  key: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  privacy: [
+    {
+      key: String,
+      enable: {
+        type: Boolean,
+        default: true,
+      },
+    },
+  ],
+  settings: [
+    {
+      key: String,
+      enable: {
+        type: Boolean,
+        default: true,
+      },
+    },
+  ],
   enable: {
     type: Boolean,
     default: true,

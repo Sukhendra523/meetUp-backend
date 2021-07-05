@@ -19,6 +19,7 @@ const {
   getAllMeeting,
   uploadMeetingDocuments,
   updateMeetingFeatures,
+  searchMeeting,
 } = require("../controller/meeting");
 
 const storage = multer.diskStorage({
@@ -38,7 +39,7 @@ const upload = multer({ storage });
 const router = express.Router();
 
 const checkMeetingAccess = (req, res, next) =>
-  req.body.createdBy !== req.user._id
+  req.params.createdBy !== req.user._id
     ? canManageMeeting(req, res, next)
     : canWriteMeeting(req, res, next);
 
@@ -52,33 +53,43 @@ router.post("/meeting/create", canWriteMeeting, createMeeting);
 // getAllMeetings
 router.get("/meetings", canManageMeeting, getAllMeeting);
 
-// get Meeting List ByDateAndEmail
-router.get(
-  "/meeting/:date",
-  (req, res, next) =>
-    req.body.email !== req.user.email
-      ? canManageMeeting(req, res, next)
-      : next(),
-  getMeetingByDateAndEmail
-);
-
 // get Meeting Details
-router.get("/meeting/getMeetingDetails/:id", getMeetingDetails);
+router.get("/meeting/getMeetingDetails/:id/:createdBy", getMeetingDetails);
 
 // delete meeting
-router.delete("/meeting/delete/:id", deleteMeeting);
+router.delete("/meeting/delete/:id/:createdBy", deleteMeeting);
 
 // update Meeting
-router.put("/meeting/update/:id", updateMeeting);
+router.put("/meeting/update/:id/:createdBy", updateMeeting);
 
 // update meeting Features
-router.put("/meeting/update/:id", updateMeetingFeatures);
+router.put("/meeting/updateFeatures/:id/:createdBy", updateMeetingFeatures);
 
 // uplaod Document
 router.post(
   "/meeting/document/upload/:mid",
   upload.single("document"),
   uploadMeetingDocuments
+);
+
+// get Meeting List ByDateAndEmail
+router.get(
+  "/meeting/search/:query/:email",
+  (req, res, next) =>
+    req.params.email !== req.user.email
+      ? canManageMeeting(req, res, next)
+      : next(),
+  searchMeeting
+);
+
+// get Meeting List ByDateAndEmail
+router.get(
+  "/meeting/:date",
+  (req, res, next) =>
+    req.params.email !== req.user.email
+      ? canManageMeeting(req, res, next)
+      : next(),
+  getMeetingByDateAndEmail
 );
 
 module.exports = router;

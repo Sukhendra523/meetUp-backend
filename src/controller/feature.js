@@ -3,8 +3,8 @@ const Feature = require("../models/feature");
 // add new feature
 exports.createFeature = async (req, res) => {
   try {
-    const { name, key, enable } = req.body;
-    const newfeature = new Feature({ name, key, enable });
+    const { name, key, privacy, settings, enable } = req.body;
+    const newfeature = new Feature({ name, key, privacy, settings, enable });
     const feature = await newfeature.save();
     if (feature) {
       res.status(201).json({

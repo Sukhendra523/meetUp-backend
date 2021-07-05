@@ -22,27 +22,27 @@ exports.createMeeting = async (req, res) => {
         title,
         description,
         attendees,
-        // schedule,
+        schedule,
         createdBy,
         features,
       } = req.body;
       // let start = schedule.start;
       // let end = schedule.end;
       //////////// For Development Purpose////////////////////
-      const d = new Date();
-      console.log("d", d);
-      let start = new Date();
-      console.log("start", start);
-      let [month, date, year] = start.toLocaleDateString("en-IN").split("/");
-      let [hour] = start.toLocaleTimeString("en-US").split(/:| /);
-      console.log("month, date, year, hour", month, date, year, hour);
-      let end = new Date(year, month, date, parseInt(hour) + 2, 0, 0);
-      console.log("end", end);
+      // const d = new Date();
+      // console.log("d", d);
+      // let start = new Date();
+      // console.log("start", start);
+      // let [month, date, year] = start.toLocaleDateString("en-IN").split("/");
+      // let [hour] = start.toLocaleTimeString("en-US").split(/:| /);
+      // console.log("month, date, year, hour", month, date, year, hour);
+      // let end = new Date(year, month, date, parseInt(hour) + 2, 0, 0);
+      // console.log("end", end);
 
-      let scheduleDate = {
-        start,
-        end,
-      };
+      // let scheduleDate = {
+      //   start,
+      //   end,
+      // };
       /////////////////////////////////////////////////////
 
       const meeting = await new Meeting({
@@ -50,7 +50,7 @@ exports.createMeeting = async (req, res) => {
         title,
         description,
         attendees,
-        schedule: scheduleDate,
+        schedule,
         createdBy,
         features,
       }).save();
@@ -94,6 +94,28 @@ exports.getAllMeeting = async (req, res) => {
   }
 };
 
+exports.searchMeeting = async (req, res) => {
+  try {
+    const meetings = await Meeting.find({
+      $or: [{ title: { $regex: req.params.query } }],
+    })
+      .populate("createdBy", "fullName username email image")
+      .populate("attendees", "fullName username email image");
+    meetings.length > 0
+      ? res.status(200).json({ status: 200, success: true, meetings })
+      : res
+          .status(404)
+          .json({ status: 404, success: false, message: "No meetings found" });
+  } catch (error) {
+    res.status(400).json({
+      status: 400,
+      success: false,
+      error: error.message,
+      message: "Somthing goes wrong !! tyr again later",
+    });
+  }
+};
+
 exports.getMeetingByDateAndEmail = async (req, res) => {
   try {
     let start = new Date(req.params.date);
@@ -102,7 +124,7 @@ exports.getMeetingByDateAndEmail = async (req, res) => {
     let end = new Date(
       start.getFullYear(),
       start.getMonth(),
-      start.getDate() + 2
+      start.getDate() + 1
     );
     console.log("end....", end);
 

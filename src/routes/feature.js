@@ -12,9 +12,9 @@ const router = express.Router();
 
 router.use("/", requireSignin, canWriteFeature);
 
-router.post("/feature/create", createFeature);
 router.get("/features", getAllFeatures);
-router.get("/feature/:id", getFeatureDetails);
+router.get("/feature/getFeatureDetails/:id", getFeatureDetails);
+router.post("/feature/create", createFeature);
 router.put("/feature/update/:id", updateFeature);
 router.delete("/feature/delete/:id", deleteFeature);
 
