@@ -413,7 +413,7 @@ exports.forgetPasswordMobile = async (req, res) => {
         message: "No user found with that email address.",
       });
     }
-    const resetToken = otpGenerator.generate(6, {
+    const resetToken = otpGenerator.generate(4, {
       upperCase: false,
       specialChars: false,
       alphabets: false,
