@@ -51,7 +51,7 @@ router.param("id", checkMeetingAccess);
 router.post("/meeting/create", canWriteMeeting, createMeeting);
 
 // getAllMeetings
-router.get("/meetings", canManageMeeting, getAllMeeting);
+router.post("/meetings", canManageMeeting, getAllMeeting);
 
 // get Meeting Details
 router.get("/meeting/getMeetingDetails/:id/:createdBy", getMeetingDetails);
@@ -72,7 +72,7 @@ router.post(
   uploadMeetingDocuments
 );
 
-// get Meeting List ByDateAndEmail
+// search Meeting
 router.get(
   "/meeting/search/:query/:email",
   (req, res, next) =>
@@ -84,9 +84,9 @@ router.get(
 
 // get Meeting List ByDateAndEmail
 router.get(
-  "/meeting/:date",
+  "/meeting/:date/:userId",
   (req, res, next) =>
-    req.params.email !== req.user.email
+    req.params.userId !== req.user._id
       ? canManageMeeting(req, res, next)
       : next(),
   getMeetingByDateAndEmail

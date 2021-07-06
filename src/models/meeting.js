@@ -34,7 +34,7 @@ const meetingSchema = new mongoose.Schema(
       required: true,
     },
     password: String,
-    features: [String],
+    features: [Object],
     documents: [String],
   },
   { timestamps: true }

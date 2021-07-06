@@ -1,6 +1,5 @@
 const Meeting = require("../models/meeting");
-// import endOfDayfrom 'date-fns/endOfDay'
-// import startOfDay from 'date-fns/startOfDay'
+const moment = require("moment");
 const env = require("dotenv");
 
 //Environment Variable
@@ -74,9 +73,33 @@ exports.createMeeting = async (req, res) => {
 
 exports.getAllMeeting = async (req, res) => {
   try {
-    // let start = new Date(req.params.meetingDate);
-    // console.log("Start:::::::::::::::", start);
-    const meetings = await Meeting.find()
+    var filter = {};
+    if (req.body.date) {
+      let start = new Date(req.body.date);
+      console.log("Start:::::::::::::::", start);
+
+      const end =
+        new Date(start).getFullYear() +
+        "-" +
+        (new Date(start).getMonth() + 1 >= 10
+          ? new Date(start).getMonth() + 1
+          : "0" + (new Date(start).getMonth() + 1)) +
+        "-" +
+        (new Date(start).getDate() + 1 >= 10
+          ? new Date(start).getDate() + 1
+          : "0" + (new Date(start).getDate() + 1));
+
+      console.log("end............", end, new Date(end));
+
+      filter = {
+        "schedule.start": {
+          $gte: start,
+          $lte: new Date(end),
+        },
+      };
+    }
+
+    const meetings = await Meeting.find(filter)
       .populate("createdBy", "fullName username email image")
       .populate("attendees", "fullName username email image");
     meetings.length > 0
@@ -121,20 +144,27 @@ exports.getMeetingByDateAndEmail = async (req, res) => {
     let start = new Date(req.params.date);
     console.log("Start:::::::::::::::", start);
 
-    let end = new Date(
-      start.getFullYear(),
-      start.getMonth(),
-      start.getDate() + 1
-    );
-    console.log("end....", end);
+    const end =
+      new Date(start).getFullYear() +
+      "-" +
+      (new Date(start).getMonth() + 1 >= 10
+        ? new Date(start).getMonth() + 1
+        : "0" + (new Date(start).getMonth() + 1)) +
+      "-" +
+      (new Date(start).getDate() + 1 >= 10
+        ? new Date(start).getDate() + 1
+        : "0" + (new Date(start).getDate() + 1));
+
+    console.log("end............", end, new Date(end));
 
     const meetings = await Meeting.find({
       "schedule.start": {
         $gte: start,
-        $lt: end,
+        $lte: new Date(end),
       },
-      inviteList: req.body.email,
+      attendees: req.params.userId,
     });
+    // console.log(meetings);
     meetings.length > 0
       ? res.status(200).json({ status: 200, success: true, meetings })
       : res
@@ -153,7 +183,7 @@ exports.getMeetingByDateAndEmail = async (req, res) => {
 exports.deleteMeeting = async (req, res) => {
   try {
     const meeting = await Meeting.findByIdAndDelete(req.params.id);
-    console.log(meeting);
+
     meeting
       ? res.status(200).json({
           status: 200,
