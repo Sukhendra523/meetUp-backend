@@ -87,7 +87,7 @@ exports.facebookSignin = async (req, res) => {
 };
 
 exports.signup = async (req, res) => {
-  const { email, username, contact, password } = req.body;
+  const { firstName, lastName, email, username, contact, password } = req.body;
   try {
     const emailExits = await User.findOne({ email: email }, "email");
     const usernameExits = await User.findOne(
@@ -105,6 +105,8 @@ exports.signup = async (req, res) => {
     } else {
       const hashPassword = await bcrypt.hash(password, 10);
       const newUser = new User({
+        firstName,
+        lastName,
         email,
         username,
         contact,
@@ -202,7 +204,7 @@ exports.signup = async (req, res) => {
 
 exports.registerAccount = async (req, res) => {
   try {
-    const { token, email, username, password } = req.body;
+    const { token, firstName, lastName, email, username, password } = req.body;
     const auth = jwt.verify(token, process.env.SECRET_KEY);
     if (!auth) throw new Error("Invalid or expired password reset token");
 
@@ -227,6 +229,9 @@ exports.registerAccount = async (req, res) => {
     const newUser = await User.create({
       email: auth.email,
       username,
+      firstName,
+      lastName,
+      contact,
       password: { oauthPassword: "", userPassword: hashPassword },
       role: auth.role,
     });
@@ -525,10 +530,9 @@ exports.forgetPassword = async (req, res) => {
 
 exports.resetPasswordMobile = async (req, res) => {
   try {
-    const { token, password } = req.body;
-
-    let resetToken = await Token.findOne({ token: token });
-
+    const { token, email, password } = req.body;
+    const { _id } = await User.findOne({ email });
+    let resetToken = await Token.findOne({ userId: _id, token: token });
     if (!resetToken) {
       return res.status(400).json({
         status: 400,
