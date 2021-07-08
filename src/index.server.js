@@ -13,6 +13,7 @@ const roleRoutes = require("./routes/role");
 const userRoutes = require("./routes/user");
 const featureRoutes = require("./routes/feature");
 const meetingRoutes = require("./routes/meeting");
+const attendanceRoutes = require("./routes/attendance");
 
 //using express application
 const app = express();
@@ -53,6 +54,7 @@ app.use("/api", userRoutes);
 app.use("/api", roleRoutes);
 app.use("/api", featureRoutes);
 app.use("/api", meetingRoutes);
+app.use("/api", attendanceRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`SERVER is running at PORT = ${process.env.PORT}`);
