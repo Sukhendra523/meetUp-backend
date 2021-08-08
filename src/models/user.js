@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
-      default: mongoose.Types.ObjectId("60d05573bca4302ac8b87f2b"),
+      default: mongoose.Types.ObjectId("60e8166edc2a851a949a84e7"),
     },
     password: {
       oauthPassword: String,

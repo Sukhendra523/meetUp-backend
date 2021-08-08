@@ -8,6 +8,7 @@ const DOMAIN = "sandboxf74c8ab61afc4c76934293627a5a58c1.mailgun.org";
 const mg = mailgun({ apiKey: process.env.MAILGUN_APIKEY, domain: DOMAIN });
 const fetch = require("node-fetch");
 const otpGenerator = require("otp-generator");
+const { OAuth2Client } = require("google-auth-library");
 
 //Environment Variable
 env.config();
@@ -19,7 +20,7 @@ exports.facebookSignin = async (req, res) => {
     const { email, username } = await (
       await fetch(urlGraphFacebook, { method: "GET" })
     ).json();
-    const user = await User.findOne(email).populate(
+    const user = await User.findOne({ email: email }).populate(
       "role",
       "_id name permissions enable"
     );
@@ -75,6 +76,92 @@ exports.facebookSignin = async (req, res) => {
           },
         });
       }
+    }
+  } catch (error) {
+    res.status(400).json({
+      status: 400,
+      success: false,
+      error: error.message,
+      message: "Somthing goes wrong !! tyr again later",
+    });
+  }
+};
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT);
+// Google Login
+
+exports.googleSignin = async (req, res) => {
+  const { idToken } = req.body;
+
+  try {
+    const response = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT,
+    });
+    const { email_verified, name, email } = response.payload;
+    if (email_verified) {
+      const user = await User.findOne({ email: email }).populate(
+        "role",
+        "_id name permissions enable"
+      );
+      if (user) {
+        const token = jwt.sign(
+          { email: user.email, _id: user._id, role: user.role },
+          process.env.SECRET_KEY,
+          { expiresIn: "1d" }
+        );
+        res.status(200).json({ status: 200, success: true, token, user });
+      } else {
+        const password = email + process.env.SECRET_KEY;
+        const hashPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({
+          firstName: name,
+          email,
+          username: email.split("@")[0],
+          password: { oauthPassword: hashPassword, userPassword: hashPassword },
+        });
+        const user = await (await newUser.save())
+          .populate("role", "_id name permissions enable")
+          .execPopulate();
+        if (user) {
+          const {
+            _id,
+            email,
+            username,
+            fullname,
+            firstName,
+            lastName,
+            conatct,
+            image,
+            role,
+          } = user;
+          const token = jwt.sign(
+            { email: email, _id: _id, role: role },
+            process.env.SECRET_KEY,
+            { expiresIn: "1d" }
+          );
+          res.status(201).json({
+            status: 201,
+            success: true,
+            token,
+            user: {
+              _id,
+              email,
+              username,
+              fullname,
+              firstName,
+              lastName,
+              conatct,
+              image,
+              role,
+            },
+          });
+        }
+      }
+    } else {
+      return res.status(400).json({
+        error: "Google login failed. Try again",
+      });
     }
   } catch (error) {
     res.status(400).json({

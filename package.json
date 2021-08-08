@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "\"backen Rest SERver API for jitsi meet app\"",
+  "description": "\"backend Rest SERVER API for jitsi meet app\"",
   "main": "index.server.js",
   "scripts": {
     "start": "nodemon src/index.server.js",
@@ -23,6 +23,7 @@
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "express-validator": "^6.12.0",
+    "google-auth-library": "^7.5.0",
     "jsonwebtoken": "^8.5.1",
     "mailgun-js": "^0.22.0",
     "moment": "^2.29.1",

@@ -10,6 +10,7 @@ const {
   registerAccount,
   forgetPasswordMobile,
   resetPasswordMobile,
+  googleSignin,
 } = require("../controller/auth");
 
 const {
@@ -25,6 +26,8 @@ const router = express.Router();
 router.post("/signup", validateSignupRequest, isRequestValidated, signup);
 router.post("/signin", validateSigninRequest, isRequestValidated, signin);
 router.post("/facebookLogin", facebookSignin);
+router.post("/googleSignin", googleSignin);
+
 router.post("/auth/activate", activateAccount);
 router.post("/register", registerAccount);
 router.post(
